@@ -8,36 +8,36 @@
 <meta name="color-scheme" content="light dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
 /* ============ TOKENS ============ */
 :root{
-  --canvas:#ffffff; --band:#fafafb; --card:#f2f2f3; --hover:#ededee;
-  --ink:#17191c; --slate:#5d616b; --ash:#7d808a; --smoke:#a3a6af;
-  --line:#ececec; --line-2:#dcdce0;
-  --peach:#fbe1d1; --brown:#5d2a1a; --brown-soft:#8a4b38;
-  --pre-line:#c4c5ca; --ok:#2f6b3f; --ok-bg:#e4f1e7; --bad:#9b2c2c; --bad-bg:#f8e3e1;
-  --shadow-float:0 0 0 1px rgba(4,23,43,.05),0 20px 25px -5px rgba(0,0,0,.10),0 8px 10px -6px rgba(0,0,0,.10);
-  --r-card:24px; --r-elev:20px; --r-sm:16px; --r-pill:9999px;
-  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
-  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --canvas:#ffffff; --band:#f4f6fb; --card:#eef2fb; --hover:#e3e9fa;
+  --ink:#14213d; --slate:#54607e; --ash:#76809c; --smoke:#9aa3bb;
+  --line:#e3e8f3; --line-2:#cfd7ea;
+  --peach:#e5ebff; --brown:#3b5bfd; --brown-soft:#2b45c9;
+  --pre-line:#b9c3e6; --ok:#0f8a6a; --ok-bg:#e3f7f1; --bad:#b4302f; --bad-bg:#fbe7e6;
+  --shadow-float:0 12px 30px -12px rgba(36,60,160,.25);
+  --r-card:22px; --r-elev:22px; --r-sm:16px; --r-pill:14px;
+  --serif:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --canvas:#141517; --band:#191b1e; --card:#1f2124; --hover:#282b2f;
-  --ink:#ececee; --slate:#a6a9b2; --ash:#8b8e98; --smoke:#6f727c;
-  --line:#2a2d31; --line-2:#383b41;
-  --peach:#3a2a22; --brown:#f0c9b3; --brown-soft:#d3a68e;
-  --pre-line:#4b4e56; --ok:#8fd0a0; --ok-bg:#1d3325; --bad:#f0a3a3; --bad-bg:#3a2121;
+  --canvas:#121a33; --band:#0c1224; --card:#1a2447; --hover:#222e58;
+  --ink:#e8ecff; --slate:#aab4d8; --ash:#8791b6; --smoke:#6c7799;
+  --line:#243059; --line-2:#33417a;
+  --peach:#202c60; --brown:#8da2ff; --brown-soft:#b3c0ff;
+  --pre-line:#4a5686; --ok:#5fd6b3; --ok-bg:#12332e; --bad:#ff9a98; --bad-bg:#3b1f26;
   --shadow-float:0 0 0 1px rgba(255,255,255,.06),0 20px 25px -5px rgba(0,0,0,.5);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;
+body{margin:0;background:var(--band);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-h1,h2,h3,h4{font-family:var(--serif);font-weight:400;line-height:1.18;margin:0;text-wrap:balance}
-h1{letter-spacing:-.022em}h2{letter-spacing:-.016em}h3,h4{letter-spacing:-.011em}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:700;line-height:1.18;margin:0;text-wrap:balance}
+h1{letter-spacing:-.03em;font-weight:800}h2{letter-spacing:-.025em}h3,h4{letter-spacing:-.015em}
 p{margin:0}
 a{color:var(--slate);text-underline-offset:3px}
 a:hover{color:var(--ink)}
@@ -205,7 +205,7 @@ select:focus,input.num:focus,textarea:focus{border-color:var(--ink);outline:none
 .gr4{background:#5b5e66;color:#fff}
 .gr3{background:#d9d9dc;color:#17191c}
 .gr2{background:#ececed;color:#5d616b}
-.meter{height:8px;border-radius:var(--r-pill);background:rgba(128,80,60,.2);overflow:hidden;margin:16px 0 6px}
+.meter{height:8px;border-radius:var(--r-pill);background:rgba(59,91,253,.18);overflow:hidden;margin:16px 0 6px}
 .meter>i{display:block;height:100%;border-radius:var(--r-pill);background:var(--brown);transition:width .5s}
 .kv{display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-top:1px solid rgba(128,80,60,.2);color:var(--brown-soft)}
 .kv b{font-weight:500;color:var(--brown)}
@@ -262,6 +262,60 @@ footer div{max-width:1200px;margin:0 auto;padding:22px 24px;display:flex;justify
 @media(max-width:600px){main{padding:30px 16px 90px}.topbar-in{padding:12px 16px}.brand-sub{display:none}.part{gap:14px}.tabs{top:61px}}
 @media print{.topbar,.tabs,footer,.hero-cta,.pager,.no-print{display:none!important}main{padding:0}body{background:#fff;color:#000}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important;scroll-behavior:auto!important}}
+
+/* ============ B USLUBI: zamonaviy o'quv platforma ============ */
+.brand-name{font-weight:800;letter-spacing:-.03em}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#3b5bfd,#12a37f);-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-theme="dark"] .hero h1 em{background:linear-gradient(90deg,#8da2ff,#5fd6b3);-webkit-background-clip:text;background-clip:text}
+.btn-primary,.btn-ghost,.pill-btn,.fbtn{border-radius:14px;font-weight:600}
+.btn-primary{background:var(--brown);border-color:var(--brown);color:#fff}
+:root[data-theme="dark"] .btn-primary{color:#0c1224}
+.btn-primary:hover{color:#fff;opacity:.9}
+:root[data-theme="dark"] .btn-primary:hover{color:#0c1224}
+.btn-ghost{border-color:var(--line-2)}
+.pill-btn{border-color:var(--line-2)}
+.pill-btn[aria-pressed="true"],.fbtn[aria-pressed="true"]{background:var(--brown);border-color:var(--brown);color:#fff}
+:root[data-theme="dark"] .pill-btn[aria-pressed="true"],:root[data-theme="dark"] .fbtn[aria-pressed="true"]{color:#0c1224}
+.topbar{border-bottom:1px solid var(--line)}
+.tabs{top:66px;background:var(--canvas)}
+.tab{font-weight:600;font-size:14.5px}
+.tab[aria-current="page"]{color:var(--brown);border-bottom-color:var(--brown)}
+.part{border-bottom-color:var(--line)}
+.panel,.panel.plain,.block,.step,.tile,.mod{border:1px solid var(--line)}
+.panel,.block,.step,.mod,.tile:not(.hl){background:var(--canvas)}
+.panel .tile,.panel .mod{background:var(--card)}
+.tile.hl{background:linear-gradient(135deg,#3b5bfd,#5f7bff);color:#fff;border-color:transparent}
+.tile.hl .lab,.tile.hl .sub{color:rgba(255,255,255,.85)}
+.tile.hl .big{color:#fff}
+:root[data-theme="dark"] .tile.hl{background:linear-gradient(135deg,#3345b8,#4a63e0)}
+.mod:hover{transform:translateY(-3px);box-shadow:var(--shadow-float);background:var(--canvas)}
+.mod{transition:transform .2s,box-shadow .2s}
+.chip.core{background:var(--peach);border-color:transparent;font-weight:600}
+.chip{font-weight:500}
+.gr5{background:var(--brown);color:#fff}
+:root[data-theme="dark"] .gr5{color:#0c1224}
+.result-card{background:linear-gradient(135deg,#3b5bfd,#5f7bff);color:#fff}
+:root[data-theme="dark"] .result-card{background:linear-gradient(135deg,#2b3a9a,#3d55d6)}
+.result-card .rl,.result-card .bignum,.result-card .kv,.result-card .kv b,.result-card .note{color:#fff!important}
+.result-card .kv{border-top-color:rgba(255,255,255,.25)}
+.result-card .meter{background:rgba(255,255,255,.25)}
+.result-card .meter>i{background:#fff}
+.result-card .btn-primary{background:#fff;border-color:#fff;color:#2b45c9}
+.result-card .btn-ghost{border-color:rgba(255,255,255,.5);color:#fff}
+.result-card .btn-ghost:hover{background:rgba(255,255,255,.15)}
+.result-card .gradepill{background:#fff;color:#2b45c9}
+.part.key{background:var(--peach)}
+.example{border-left-color:var(--brown);font-family:var(--serif);font-weight:500}
+.toast{border-radius:14px}
+tr.avg{background:var(--peach)}
+.lvl:has(input:checked){border-color:var(--brown);background:var(--peach)}
+.lvl:has(input:checked) .tag,.lvl:has(input:checked) .desc{color:var(--ink)}
+.q-opt.sel{border-color:var(--brown);background:var(--peach)}
+select:focus,input.num:focus,textarea:focus{border-color:var(--brown)}
+:focus-visible{outline-color:var(--brown)}
+.demo-bar{background:var(--peach);color:var(--brown-soft);font-size:13px;text-align:center;padding:7px 16px;border-bottom:1px solid var(--line)}
+:root[data-theme="dark"] .demo-bar{color:var(--brown)}
+.demo-tag{display:inline-block;font-size:12px;border:1px dashed var(--line-2);border-radius:999px;padding:1px 10px;color:var(--ash);vertical-align:middle;margin-left:8px;font-weight:500}
 </style>
 </head>
 <body>
@@ -278,6 +332,7 @@ footer div{max-width:1200px;margin:0 auto;padding:22px 24px;display:flex;justify
     <button class="icon-btn" id="themeBtn" aria-label="Mavzuni almashtirish" title="Yorug‘ / qorong‘i">◐</button>
   </div>
 </header>
+<div class="demo-bar">Demo versiya: talabalar, ballar va tadqiqot raqamlari <b>namunaviy</b>, haqiqiy eksperiment natijasi emas.</div>
 <nav class="tabs" aria-label="Bo‘limlar"><div class="tabs-in" id="tabs"></div></nav>
 
 <main id="app" tabindex="-1"></main>
@@ -491,12 +546,12 @@ var STUDENTS=[
  ST("s9","Kamola Ergasheva","202-A",[57,54,50,55,52,48],[78,75,69,76,72,65]),
  ST("s10","Farrux Qodirov","202-B",[47,45,42,46,43,39],[66,63,58,64,60,54])
 ];
-var S={role:"student",theme:null,stu:"s1",done:{},sort:{k:"name",d:1}};
+var S={role:"student",theme:null,stu:"s1",done:{},diag:{},sort:{k:"name",d:1}};
 var KEY="critiread.v2";
 function getStu(id){for(var i=0;i<STUDENTS.length;i++){if(STUDENTS[i].id===id)return STUDENTS[i];}return STUDENTS[0];}
-function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||"null");if(r){S.role=r.role||S.role;S.theme=r.theme||null;S.stu=r.stu||S.stu;S.done=r.done||{};
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||"null");if(r){S.role=r.role||S.role;S.theme=r.theme||null;S.stu=r.stu||S.stu;S.done=r.done||{};S.diag=r.diag||{};
   if(r.students){r.students.forEach(function(x){var s=getStu(x.id);if(s&&x.cur&&x.count){s.cur=x.cur;s.count=x.count;}});}}}catch(e){}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify({role:S.role,theme:S.theme,stu:S.stu,done:S.done,
+function save(){try{localStorage.setItem(KEY,JSON.stringify({role:S.role,theme:S.theme,stu:S.stu,done:S.done,diag:S.diag,
   students:STUDENTS.map(function(s){return{id:s.id,cur:s.cur,count:s.count};})}));}catch(e){}}
 function resetAll(){try{localStorage.removeItem(KEY);}catch(e){}location.reload();}
 
@@ -577,7 +632,7 @@ function viewHome(){
    '<div class="methodline"><span><b>Model:</b> CTDF</span><span><b>Darajalar:</b> CEFR</span><span><b>Standart:</b> Paul–Elder</span><span><b>Ko‘nikma:</b> Facione ×6</span></div>'+
    (doneN?'<p class="note" style="margin-top:14px">Siz '+doneN+' ta mavzuni bajargansiz. <a href="#/modules">Davom eting →</a></p>':'')+
    '</div><div class="artifact"><div class="cap"><span>Namuna — talaba CT-profili</span><b>'+ov+'%</b></div><div class="radar-wrap">'+
-   radarSVG([{vals:s.pre,color:"var(--pre-line)",dash:1,w:1.5},{vals:s.cur,color:"var(--brown)",fill:"rgba(140,80,56,.14)"}],330)+'</div></div></div>'+
+   radarSVG([{vals:s.pre,color:"var(--pre-line)",dash:1,w:1.5},{vals:s.cur,color:"var(--brown)",fill:"rgba(59,91,253,.16)"}],330)+'</div></div></div>'+
    '<div class="divider"></div><div class="section-head"><div class="eyebrow">Qanday ishlaydi</div><h2>To‘rt qadamda CT-profil</h2></div>'+
    '<div class="steps">'+
    '<div class="step"><b>1</b><h4>Pre-test</h4><p>12 savollik diagnostika boshlang‘ich darajani aniqlaydi.</p></div>'+
@@ -589,7 +644,7 @@ function viewHome(){
    '<div class="part"><div class="no">01</div><div><h3><a href="#/modules">Mavzular (modullar)</a></h3><p>Dastur bo‘yicha 30 ketma-ket modul: matn bilan ishlash, dalil–xulosani farqlash, muallif pozitsiyasini tahlil qilish, manbalarni qiyoslash va argumentlangan yozma matn yaratish — nazariy material, namunalar va mashqlar bilan.</p></div></div>'+
    '<div class="part"><div class="no">02</div><div><h3><a href="#/rubric">Topshiriqlar</a></h3><p>O‘qish va yozishga oid topshiriqlar: matn tahlili, ochiq savollar, muqobil nuqtai nazarni baholash, esse va insho. Mustaqil hamda guruhli bajarish formatlarini qamrab oladi.</p></div></div>'+
    '<div class="part"><div class="no">03</div><div><h3><a href="#/profile">Baholash tizimi</a></h3><p>Topshiriqlar avtomatlashtirilgan va kriterial (rubrikaga asoslangan) tarzda baholanadi; natijalar talaba kabinetida to‘planadi va o‘qituvchiga statistik tahlil ko‘rinishida taqdim etiladi.</p></div></div>'+
-   '<div class="part key"><div class="no">04</div><div><span class="tagx">Alohida, mustaqil bo‘lim</span><h3><a href="#/test">Tanqidiy fikrlash malakasini baholash</a></h3><p>Facione ajratgan olti ko‘nikma — talqin, tahlil, baholash, xulosa chiqarish, izohlash va o‘z-o‘zini boshqarish — bo‘yicha olib boriladi. CCTST asosidagi diagnostik testlar, kriterial rubrika hamda dinamik ko‘rsatkichlar orqali har bir talabaning darajasi ham sonli, ham sifatli baholanadi va monitoring qilinadi.</p></div></div>'+
+   '<div class="part key"><div class="no">04</div><div><span class="tagx">Alohida, mustaqil bo‘lim</span><h3><a href="#/test">Tanqidiy fikrlash malakasini baholash</a></h3><p>Facione ajratgan olti ko‘nikma — talqin, tahlil, baholash, xulosa chiqarish, izohlash va o‘z-o‘zini boshqarish — bo‘yicha olib boriladi. Diagnostik savollar, kriterial rubrika hamda dinamik ko‘rsatkichlar orqali har bir talabaning darajasi ham sonli, ham sifatli baholanadi va monitoring qilinadi.</p></div></div>'+
    '</div>';
   return{html:html,title:""};
 }
@@ -665,7 +720,7 @@ function viewModule(arg){
 /* diagnostik test */
 var testState=null;
 function viewTest(){
-  var html='<div class="section-head"><div class="eyebrow">Facione 6 ko‘nikma · CCTST ruhida</div><h2>Diagnostik test</h2>'+
+  var html='<div class="section-head"><div class="eyebrow">Facione 6 ko‘nikma · boshlang‘ich (PRE) va yakuniy (POST) o‘lchov</div><h2>Diagnostik test</h2>'+
    '<p class="lede">12 savol, har ko‘nikmadan 2 tadan. Natija CT-profilga yoziladi. Taxminan 8–10 daqiqa.</p></div><div id="testRoot"></div>';
   return{html:html,title:"Diagnostik test",after:function(){
     if(!testState)testState={i:0,ans:[],fin:false};
@@ -696,22 +751,29 @@ var TIPS=["Matn mazmuni va yashirin ma’noni sekin o‘qib, o‘z so‘zingiz b
 function drawTestResult(root){
   var p=testScores(),ov=Math.round(mean(p)),weak=p.indexOf(Math.min.apply(null,p));
   var right=testState.ans.filter(function(a,i){return a===TEST[i].a;}).length;
-  root.innerHTML='<div class="split"><div class="panel plain pad"><div class="radar-wrap">'+radarSVG([{vals:p,color:"var(--brown)",fill:"rgba(140,80,56,.14)"}],400)+'</div></div>'+
+  root.innerHTML='<div class="split"><div class="panel plain pad"><div class="radar-wrap">'+radarSVG([{vals:p,color:"var(--brown)",fill:"rgba(59,91,253,.16)"}],400)+'</div></div>'+
    '<div><div class="tiles" style="margin-bottom:14px"><div class="tile hl"><div class="lab">Umumiy natija</div><div class="big">'+ov+'%</div><div class="sub">baho '+grade(ov)+' · '+right+' / '+TEST.length+' to‘g‘ri</div></div>'+
    '<div class="tile"><div class="lab">Eng zaif ko‘nikma</div><div class="big" style="font-size:20px">'+SKILLS[weak].k+'</div><div class="sub">'+p[weak]+'%</div></div></div>'+
    '<div class="panel pad"><h3 style="font-size:19px;margin-bottom:6px">Ko‘nikmalar kesimi</h3><div class="skill-list" style="margin-top:14px">'+
    SKILLS.map(function(s,i){return '<div class="skill-row"><div class="nm">'+s.k+' <em>'+s.en+'</em></div><div class="val tnum">'+p[i]+'%</div><div class="dualbar"><span class="now" style="width:'+p[i]+'%"></span></div></div>';}).join("")+
    '</div><div class="advice"><b>Tavsiya:</b> '+TIPS[weak]+'</div></div>'+
-   '<div class="no-print" style="margin-top:16px"><label class="fld" for="applySel">Natijani qaysi talaba profiliga yozish?</label><select id="applySel">'+stuOptions(S.stu)+'</select></div>'+
-   '<div class="hero-cta no-print"><button class="btn-primary" id="applyTest">Profilga yozish</button><button class="btn-ghost" id="retest">Qayta topshirish</button></div></div></div>'+
+   '<div class="no-print" style="margin-top:16px"><label class="fld" for="applySel">Natija qaysi talaba uchun saqlansin?</label><select id="applySel">'+stuOptions(S.stu)+'</select><p class="note" style="margin-top:8px">Birinchi saqlash — PRE, keyingisi — POST. Diagnostika CT bahosiga qo‘shilmaydi, faqat o‘sish (Δ) uchun.</p></div>'+
+   '<div class="hero-cta no-print"><button class="btn-primary" id="applyTest">Pre/Post sifatida saqlash</button><button class="btn-ghost" id="retest">Qayta topshirish</button></div><div id="diagDelta"></div></div></div>'+
    '<h3 style="font-size:22px;margin:40px 0 14px">Javoblar tahlili</h3>'+
    TEST.map(function(q,i){var ok=testState.ans[i]===q.a;
      return '<div class="block" style="margin-bottom:10px"><div class="note">'+(i+1)+'. '+SKILLS[q.s].k+' · <b style="color:'+(ok?"var(--ok)":"var(--bad)")+'">'+(ok?"to‘g‘ri":"noto‘g‘ri")+'</b></div><p class="q-text" style="margin:4px 0">'+q.t+'</p>'+
      '<p class="note">To‘g‘ri javob: <b>'+esc(q.o[q.a])+'</b>'+(ok?'':' · sizniki: '+esc(q.o[testState.ans[i]]||"—"))+'. '+q.why+'</p></div>';}).join("");
+  function showDelta(){
+    var d=S.diag[$("#applySel").value]||{};
+    if(!d.pre){$("#diagDelta").innerHTML="";return;}
+    var rows=SKILLS.map(function(s,i){var cur=d.post||null;return '<tr><td>'+s.k+'</td><td class="num">'+d.pre[i]+'%</td><td class="num">'+(cur?cur[i]+'%':'—')+'</td><td class="num">'+(cur?((cur[i]-d.pre[i]>=0?"+":"")+(cur[i]-d.pre[i])):'—')+'</td></tr>';}).join("");
+    $("#diagDelta").innerHTML='<h3 style="font-size:18px;margin:22px 0 10px">PRE → POST (saqlangan)</h3><div class="tbl-wrap"><table style="min-width:0"><thead><tr><th>Ko‘nikma</th><th class="num">PRE</th><th class="num">POST</th><th class="num">Δ</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
+  showDelta();$("#applySel").addEventListener("change",showDelta);
   $("#applyTest").addEventListener("click",function(){
-    var stu=getStu($("#applySel").value);
-    stu.cur=stu.cur.map(function(v,i){return Math.round((v+p[i])/2);});
-    S.stu=stu.id;save();toast(stu.name+" — profil yangilandi");location.hash="#/profile";});
+    var id=$("#applySel").value,stu=getStu(id),d=S.diag[id]||(S.diag[id]={});
+    if(!d.pre){d.pre=p.slice();toast(stu.name+" — PRE saqlandi");}else{d.post=p.slice();toast(stu.name+" — POST saqlandi");}
+    S.stu=id;save();showDelta();});
   $("#retest").addEventListener("click",function(){testState=null;route();});
 }
 
@@ -799,7 +861,7 @@ function viewProfile(){
     function draw(){
       var stu=getStu(S.stu),ov=Math.round(mean(stu.cur)),ovp=Math.round(mean(stu.pre));
       $("#profOverall").textContent=ov+"%";$("#profGrowth").textContent="baho "+grade(ov)+" · pre "+ovp+"% → "+(ov>=ovp?"+":"")+(ov-ovp)+" p.p.";
-      $("#radarBox").innerHTML=radarSVG([{vals:stu.pre,color:"var(--pre-line)",dash:1,w:1.5},{vals:stu.cur,color:"var(--brown)",fill:"rgba(140,80,56,.14)"}],410);
+      $("#radarBox").innerHTML=radarSVG([{vals:stu.pre,color:"var(--pre-line)",dash:1,w:1.5},{vals:stu.cur,color:"var(--brown)",fill:"rgba(59,91,253,.16)"}],410);
       $("#skillList").innerHTML=SKILLS.map(function(s,i){var d=stu.cur[i]-stu.pre[i];
         return '<div class="skill-row"><div class="nm">'+s.k+' <em>'+s.en+'</em></div><div class="val tnum">'+stu.cur[i]+'% <span style="color:var(--ash)">('+(d>=0?"+":"")+d+')</span></div><div class="dualbar"><span class="pre" style="width:'+stu.pre[i]+'%"></span><span class="now" style="width:'+stu.cur[i]+'%"></span></div></div>';}).join("");
       var w=stu.cur.indexOf(Math.min.apply(null,stu.cur));
@@ -857,7 +919,7 @@ function interp(d){var a=Math.abs(d);return a>=0.8?"kuchli ta’sir":a>=0.5?"o�
 function viewResearch(){
   function inp(id,v){return '<input class="num" id="'+id+'" inputmode="decimal" value="'+v+'" aria-label="'+id+'">';}
   var html='<div class="section-head"><div class="eyebrow">Eksperimental o‘lchov · 15 &amp; 30-modul</div><h2>Diagnostik test va samaradorlik (Cohen’s d)</h2>'+
-   '<p class="lede">Pre/post natijalar solishtiriladi. Cohen’s d — eksperiment ta’sir kuchini o‘lchaydigan standart ko‘rsatkich. Qiymatlarni tahrirlang — natija darhol qayta hisoblanadi.</p></div>'+
+   '<p class="lede">Pre/post natijalar solishtiriladi. Cohen’s d — eksperiment ta’sir kuchini o‘lchaydigan standart ko‘rsatkich. Quyidagi boshlang‘ich qiymatlar <b>faqat namuna</b> (haqiqiy eksperiment ma’lumoti emas) — o‘z ma’lumotlaringizni kiriting, natija darhol qayta hisoblanadi.</p></div>'+
    '<div class="split"><div class="panel pad"><h3 style="font-size:20px;margin-bottom:18px">Guruh natijalari (o‘rtacha / SD, n)</h3><div class="grid2" style="gap:18px">'+
    '<div><div class="eyebrow" style="color:var(--slate)">Eksperimental guruh</div><label class="fld" style="margin-top:12px">Pre — o‘rtacha / SD</label><div style="display:flex;gap:9px">'+inp("ePreM",52.4)+inp("ePreSD",9.1)+'</div>'+
    '<label class="fld" style="margin-top:12px">Post — o‘rtacha / SD</label><div style="display:flex;gap:9px">'+inp("ePostM",71.8)+inp("ePostSD",8.3)+'</div><label class="fld" style="margin-top:12px">n</label>'+inp("eN",28)+'</div>'+
