@@ -1,0 +1,9 @@
+{
+  "name": "critiread",
+  "private": true,
+  "type": "module",
+  "description": "CritiRead — CTDF tanqidiy fikrlash platformasi (Cloudflare Pages + D1)",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0"
+  }
+}

@@ -151,5 +151,44 @@ ok((await T.call('POST', `teacher/invites/${row2.id}/revoke`)).status === 200, '
 ok((await J3.call('POST', 'join', { code: inv2.code, name: 'Uchinchi', email: 'j3@critiread.uz', password: 'join-pass-333' })).status === 403, 'o‘chirilgan havola rad');
 ok(((await T.call('GET', 'teacher/students')).data.students.filter((x) => x.email.startsWith('j')).length) === 2, 'faqat 2 ta talaba qo‘shilgan');
 
+console.log('14) AI (soxta Anthropic serveri bilan)');
+const MOCK = process.env.MOCK || 'http://localhost:8799';
+const last = async () => (await fetch(MOCK + '/_last')).json();
+ok((await J1.call('GET', 'ai/status')).data.enabled === true, 'AI sozlangan');
+const longEs = Array.from({ length: 60 }, (_, i) => 'idea' + i).join(' ');
+const es2 = (await J1.call('POST', 'essays', { topic: 6, body: longEs })).data;
+const fb1 = (await J1.call('POST', `essays/${es2.id}/feedback`)).data;
+ok(fb1.ok && fb1.feedback.body.startsWith('Javob:'), 'talabaga AI fikri (1)');
+let lr = await last();
+ok(lr.body.model === 'claude-opus-5-5' && lr.key === 'test-key-not-real', 'model claude-opus-5-5, kalit SDK orqali yuborildi');
+ok(lr.body.output_config.effort === 'low' && !('temperature' in lr.body) && !lr.body.thinking, 'effort=low, temperature/thinking yo‘q');
+ok(JSON.stringify(lr.body.system).includes('Do NOT give a grade') && JSON.stringify(lr.body.messages).includes('<essay>'), 'baho berilmasligi va <essay> chegarasi');
+ok((await J1.call('POST', `essays/${es2.id}/feedback`)).data.ok === true, 'talabaga AI fikri (2)');
+ok((await J1.call('POST', `essays/${es2.id}/feedback`)).status === 409, 'uchinchisi rad (esse boshiga 2 ta)');
+ok((await J2.call('POST', `essays/${es2.id}/feedback`)).status === 404, 'boshqa talabaning essesiga AI fikri olinmaydi');
+const mine = (await J1.call('GET', 'me/essays')).data.essays.find((e) => e.id === es2.id);
+ok(mine.feedback.length === 2, 'fikrlar saqlandi va ro‘yxatda ko‘rinadi');
+ok((await T.call('POST', `essays/${es2.id}/feedback`)).status === 403, 'o‘qituvchi talaba AI fikrini ishlata olmaydi');
+const sug = (await T.call('POST', `teacher/essays/${es2.id}/ai-suggest`)).data;
+ok(sug.criteria && sug.criteria.length === 5 && sug.criteria.map((c) => c.level).join('') === 'BCBAC', 'o‘qituvchiga 5 mezon bo‘yicha tavsiya');
+lr = await last();
+ok(lr.body.output_config.format.type === 'json_schema' && lr.body.output_config.effort === 'medium', 'tuzilgan JSON (json_schema), effort=medium');
+ok((await J1.call('POST', `teacher/essays/${es2.id}/ai-suggest`)).status === 403, 'talaba tavsiya ola olmaydi');
+const qs = (await T.call('POST', 'teacher/ai/questions', { module: 5, count: 3 })).data.questions;
+ok(qs.length === 3 && qs.every((q) => q.o.length === 4 && q.a >= 0 && q.a < 4), 'savol loyihalari tekshiruvdan o‘tdi (yaroqsizi tashlandi)');
+ok((await T.call('POST', 'teacher/ai/questions', { module: 99 })).status === 400, 'noto‘g‘ri modul 400');
+const c1 = (await J1.call('POST', 'coach', { module: 5, messages: [{ role: 'user', content: 'Fakt va fikr nima?' }] })).data;
+ok(c1.reply && c1.reply.startsWith('Javob:'), 'murabbiy javob berdi');
+lr = await last();
+ok(!JSON.stringify(lr.body).includes('"answer"') && lr.body.system.includes('Socratic'), 'murabbiyga javob kalitlari berilmaydi');
+ok((await J1.call('POST', 'coach', { module: 5, messages: [{ role: 'assistant', content: 'x' }] })).status === 400, 'foydalanuvchi xabarisiz so‘rov 400');
+ok((await T.call('POST', 'coach', { module: 5, messages: [{ role: 'user', content: 'salom' }] })).status === 403, 'o‘qituvchi murabbiydan foydalanmaydi');
+ok((await J2.call('POST', 'coach', { module: 5, messages: [{ role: 'user', content: 'TRIGGER_REFUSE' }] })).status === 422, 'rad etilgan javob 422 (tushunarli xabar)');
+ok((await J2.call('POST', 'coach', { module: 5, messages: [{ role: 'user', content: 'TRIGGER_401' }] })).status === 503, 'noto‘g‘ri kalit 503');
+let limitHit = 0;
+for (let i = 0; i < 32; i++) { const r = await J1.call('POST', 'coach', { module: 5, messages: [{ role: 'user', content: 'savol ' + i }] }); if (r.status === 429) { limitHit = i; break; } }
+ok(limitHit > 0 && limitHit <= 30, `kunlik limit (30) ishladi (${limitHit}-so‘rovda)`);
+ok((await anon.call('POST', 'coach', { module: 5, messages: [{ role: 'user', content: 'x' }] })).status === 401, 'kirishsiz AI 401');
+
 console.log(`\nNatija: ${pass} o‘tdi, ${fail} muvaffaqiyatsiz`);
 process.exit(fail ? 1 : 0);

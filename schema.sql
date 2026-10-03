@@ -80,3 +80,20 @@ CREATE TABLE IF NOT EXISTS invites (
   created_by INTEGER,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- AI: kunlik kvota hisobi va talabaga berilgan formativ fikrlar
+CREATE TABLE IF NOT EXISTS ai_usage (
+  user_id INTEGER NOT NULL,
+  day TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  n INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, day, kind)
+);
+CREATE TABLE IF NOT EXISTS essay_feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  essay_id INTEGER NOT NULL REFERENCES essays(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL,
+  body TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_essay ON essay_feedback(essay_id);

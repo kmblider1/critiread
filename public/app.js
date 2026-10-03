@@ -55,7 +55,7 @@ function tabsFor(){
   var u=S.user,t=[{r:"",l:"Bosh sahifa"},{r:"modules",l:"Mavzular (30)"}];
   if(!u)return t;
   if(u.role==="student")t.push({r:"test",l:"Diagnostika"},{r:"essay",l:"Esse"},{r:"profile",l:"CT-profil"});
-  else t.push({r:"students",l:"Talabalar"},{r:"rubric",l:"Baholash"},{r:"queue",l:"Esse navbati"},{r:"profile",l:"Profillar"},{r:"research",l:"Tadqiqot (Cohen’s d)"});
+  else t.push({r:"students",l:"Talabalar"},{r:"rubric",l:"Baholash"},{r:"queue",l:"Esse navbati"},{r:"aiq",l:"AI savollar"},{r:"profile",l:"Profillar"},{r:"research",l:"Tadqiqot (Cohen’s d)"});
   return t;
 }
 function chrome(cur){
@@ -75,15 +75,15 @@ function note(title,text,btn){return '<div class="locked"><h2 style="font-size:3
 async function route(){
   var seq=++S.seq;
   var h=location.hash.replace(/^#\/?/,"").split("/"),r=h[0]||"",arg=h[1];
-  var needAuth={test:1,essay:1,profile:1,students:1,rubric:1,queue:1,research:1,account:1};
-  var teacherOnly={students:1,rubric:1,queue:1,research:1},studentOnly={test:1,essay:1};
+  var needAuth={test:1,essay:1,profile:1,students:1,rubric:1,queue:1,research:1,account:1,aiq:1};
+  var teacherOnly={students:1,rubric:1,queue:1,research:1,aiq:1},studentOnly={test:1,essay:1};
   chrome(r);
   var app=$("#app");
   if(needAuth[r]&&!S.user){location.hash="#/login";return;}
   if(teacherOnly[r]&&S.user.role!=="teacher"){app.innerHTML='<section class="view">'+note("Bu bo‘lim o‘qituvchi uchun","Sizning hisobingiz talaba hisobi.")+'</section>';return;}
   if(studentOnly[r]&&S.user.role!=="student"){app.innerHTML='<section class="view">'+note("Bu bo‘lim talaba uchun","O‘qituvchi hisobida test va esse topshirilmaydi. Talabalar natijasini «Talabalar» bo‘limida ko‘ring.")+'</section>';return;}
   app.innerHTML='<div class="loading">Yuklanmoqda…</div>';
-  var views={"":viewHome,modules:viewModules,module:viewModule,login:viewLogin,join:viewJoin,account:viewAccount,test:viewTest,essay:viewEssay,profile:viewProfile,students:viewStudents,rubric:viewRubric,queue:viewQueue,research:viewResearch};
+  var views={"":viewHome,modules:viewModules,module:viewModule,login:viewLogin,join:viewJoin,account:viewAccount,test:viewTest,essay:viewEssay,profile:viewProfile,students:viewStudents,rubric:viewRubric,queue:viewQueue,aiq:viewAiq,research:viewResearch};
   var v=await (views[r]||viewHome)(arg);
   if(seq!==S.seq)return;
   app.innerHTML='<section class="view">'+v.html+'</section>';
@@ -220,10 +220,11 @@ async function viewModule(arg){
    '<div class="block"><h3>O‘quv maqsadlari</h3><ul>'+m.goal.map(function(g){return '<li>'+g+'</li>';}).join("")+'</ul></div>'+
    '<div class="block"><h3>Asosiy g‘oya</h3><p>'+m.idea+'</p></div>'+
    '<div class="block wide"><h3>Namuna</h3><div class="example">'+m.example+'</div></div>'+
-   '<div class="block wide"><h3>Mashq</h3><div id="quizBox"></div></div></div>'+
+   '<div class="block wide"><h3>Mashq</h3><div id="quizBox"></div></div><div class="block wide" id="coachBlock"></div></div>'+
    '<div class="pager">'+(prev?'<a class="btn-ghost" href="#/module/'+prev.n+'">← '+prev.n+'. '+esc(prev.uz)+'</a>':'<span></span>')+
    (next?'<a class="btn-ghost" href="#/module/'+next.n+'">'+next.n+'. '+esc(next.uz)+' →</a>':'<a class="btn-primary" href="#/profile">CT-profilga o‘tish →</a>')+'</div>';
   return{html:html,title:"Modul "+m.n,after:function(){
+    initCoach(n);
     var box=$("#quizBox"),L=["A","B","C","D"];
     if(!S.user){box.innerHTML='<div class="empty">Mashq savollari uchun <a href="#/login">tizimga kiring</a>.</div>';return;}
     if(S.user.role!=="student"){box.innerHTML='<div class="empty">Mashqni faqat talaba hisobi bajaradi.</div>';return;}
@@ -299,6 +300,7 @@ function showTestResult(root){
 
 /* ---------- esse (talaba) ---------- */
 async function viewEssay(){
+  await ensureAi();
   var r=await api("GET","me/essays");
   var essayMods=MODULES.filter(function(m){return m.type==="essay";});
   var list=(r.data.essays||[]);
@@ -310,9 +312,10 @@ async function viewEssay(){
    '<div class="hero-cta"><button class="btn-primary" type="submit">Topshirish</button></div></form></div>'+
    '<div class="panel pad"><h3 style="font-size:20px;margin-bottom:14px">Mening esselarim</h3>'+(list.length?list.map(function(e){
      var m=MODULES[e.topic-1];
-     return '<div class="queue-item" style="cursor:default"><div><b>'+e.topic+'. '+esc(m?m.en:"")+'</b><div class="note">'+esc(String(e.created_at).slice(0,16))+'</div></div>'+
-      (e.status==="graded"?'<span class="status-pill gr">'+e.pct+'% · baho '+e.grade+'</span>':'<span class="status-pill sub">baholanmoqda</span>')+'</div>';}).join(""):'<div class="empty">Hali esse topshirmagansiz.</div>')+'</div></div>';
+     return '<div class="essay-card"><div class="queue-item" style="cursor:default;margin-bottom:0"><div><b>'+e.topic+'. '+esc(m?m.en:"")+'</b><div class="note">'+esc(String(e.created_at).slice(0,16))+'</div></div>'+
+      (e.status==="graded"?'<span class="status-pill gr">'+e.pct+'% · baho '+e.grade+'</span>':'<span class="status-pill sub">baholanmoqda</span>')+'</div>'+aiFeedbackHTML(e)+'</div>';}).join(""):'<div class="empty">Hali esse topshirmagansiz.</div>')+'</div></div>';
   return{html:html,title:"Esse",after:function(){
+    wireFeedback();
     $("#e_body").addEventListener("input",function(){$("#e_wc").textContent=(this.value.trim().match(/\S+/g)||[]).length+" so‘z";});
     $("#essayForm").addEventListener("submit",async function(e){e.preventDefault();
       var res=await api("POST","essays",{topic:+$("#e_topic").value,body:$("#e_body").value});
@@ -493,18 +496,20 @@ async function viewRubric(){
 
 /* ---------- o'qituvchi: esse navbati ---------- */
 async function viewQueue(arg){
+  await ensureAi();
   if(arg){
     var er=await api("GET","teacher/essays/"+parseInt(arg,10));
     if(er.status!==200)return{html:'<div class="empty">'+esc(er.data.error||"Esse topilmadi")+' <a href="#/queue">Navbatga qaytish</a></div>',title:"Esse"};
     var e=er.data.essay,m=MODULES[e.topic-1];
     var html='<div class="crumbs"><a href="#/queue">Esse navbati</a> / '+esc(e.name)+'</div>'+
      '<div class="section-head"><div class="eyebrow">Mavzu '+e.topic+'</div><h2>'+esc(m?m.en:"Esse")+'</h2><p class="lede">'+esc(e.name)+' · '+esc(String(e.created_at).slice(0,16))+'</p></div>'+
-     '<div class="split"><div><div class="essay-text">'+esc(e.body)+'</div><div id="rubricArea" style="margin-top:18px">'+(e.status==="graded"?'<div class="empty">Bu esse allaqachon baholangan.</div>':criteriaHTML([1,2,3,4,5],"e"))+'</div></div>'+
+     '<div class="split"><div><div class="essay-text">'+esc(e.body)+'</div><div id="aiBar"></div><div id="rubricArea" style="margin-top:18px">'+(e.status==="graded"?'<div class="empty">Bu esse allaqachon baholangan.</div>':criteriaHTML([1,2,3,4,5],"e"))+'</div></div>'+
      (e.status==="graded"?'':resultCard("Baholash va saqlash"))+'</div>';
     return{html:html,title:"Esse",after:function(){
       if(e.status==="graded")return;
       var area=$("#rubricArea");previewScore(area,"#pvCard");
       area.addEventListener("change",function(){previewScore(area,"#pvCard");});
+      wireSuggest(e.id,area);
       $("#clearGrade").addEventListener("click",function(){area.innerHTML=criteriaHTML([1,2,3,4,5],"e");previewScore(area,"#pvCard");});
       $("#saveGrade").addEventListener("click",async function(){
         var items=readItems(area);if(!Object.keys(items).length){toast("Avval mezonlarni belgilang");return;}
@@ -616,5 +621,96 @@ async function viewJoin(code){
       if(res.status!==200){msg.innerHTML='<div class="form-err">'+esc(res.data.error||"Xatolik")+'</div>';return;}
       var me=await api("GET","me");S.user=me.data.user;S.quizzes=null;
       toast("Xush kelibsiz, "+S.user.name);chrome();location.hash="#/test";});
+  }};
+}
+
+/* ---------- AI yordamchilari ---------- */
+async function ensureAi(){
+  if(S.aiEnabled===undefined&&S.user){var r=await api("GET","ai/status");S.aiEnabled=!!(r.data&&r.data.enabled);}
+  return !!S.aiEnabled;
+}
+function aiFeedbackHTML(e){
+  var fb=e.feedback||[];
+  return fb.map(function(f){return '<div class="ai-box"><div class="ai-tag">AI fikri · baho emas</div><div class="ai-text">'+esc(f.body)+'</div></div>';}).join("")+
+   (S.aiEnabled&&fb.length<2?'<div style="margin-top:10px"><button class="btn-ghost btn-sm" data-ai-fb="'+e.id+'">AI fikrini olish ('+(2-fb.length)+' marta qoldi)</button></div>':'');
+}
+function wireFeedback(){
+  $$("[data-ai-fb]").forEach(function(b){b.addEventListener("click",async function(){
+    b.disabled=true;b.textContent="AI o‘qiyapti… (10–30 soniya)";
+    var r=await api("POST","essays/"+b.dataset.aiFb+"/feedback",{});
+    if(r.status!==200){toast(r.data.error||"AI xatosi");b.disabled=false;b.textContent="Qayta urinish";return;}
+    route();});});
+}
+
+/* ---------- o'qituvchi: AI rubrika tavsiyasi ---------- */
+function wireSuggest(essayId,area){
+  var bar=$("#aiBar");if(!bar)return;
+  if(!S.aiEnabled){bar.innerHTML='<div class="ai-bar"><p>AI tavsiyasi hozircha o‘chiq (API kaliti sozlanmagan).</p></div>';return;}
+  bar.innerHTML='<div class="ai-bar"><p><b>AI tavsiyasi.</b> Claude esseni o‘qib, har mezon uchun daraja taklif qiladi va asosini ko‘rsatadi. U faqat taklif: darajalarni siz tekshirasiz va o‘zgartirasiz, baho sizniki.</p><button class="btn-primary btn-sm" id="aiSuggest">AI tavsiyasini olish</button></div><div id="aiSummary"></div>';
+  $("#aiSuggest").addEventListener("click",async function(){
+    var b=this;b.disabled=true;b.textContent="AI o‘qiyapti… (15–40 soniya)";
+    var r=await api("POST","teacher/essays/"+essayId+"/ai-suggest",{});
+    b.disabled=false;b.textContent="Qayta olish";
+    if(r.status!==200){toast(r.data.error||"AI xatosi");return;}
+    r.data.criteria.forEach(function(c){
+      var inp=$('input[name="e'+c.index+'"][value="'+c.level+'"]',area);if(inp)inp.checked=true;
+      var det=$('details[data-ci="'+c.index+'"]',area);
+      if(det){var old=$(".ai-note",det);if(old)old.remove();
+        var n=document.createElement("div");n.className="ai-note";
+        n.innerHTML='<b>AI taklifi: '+esc(c.level)+'.</b> '+esc(c.reason)+(c.evidence?' <q>'+esc(c.evidence)+'</q>':'');
+        det.appendChild(n);}
+    });
+    area.dispatchEvent(new Event("change"));
+    $("#aiSummary").innerHTML='<div class="ai-box"><div class="ai-tag">AI xulosasi · taklif</div><div class="ai-text">'+esc(r.data.summary)+'</div></div>';
+    toast("Darajalar belgilandi. Tekshirib, kerak bo‘lsa o‘zgartiring");
+  });
+}
+
+/* ---------- talaba: AI-murabbiy (modul sahifasida) ---------- */
+S.chat={};
+async function initCoach(n){
+  var blk=$("#coachBlock");if(!blk)return;
+  if(!S.user||S.user.role!=="student"){blk.remove();return;}
+  if(!(await ensureAi())){blk.remove();return;}
+  var log=S.chat[n]=S.chat[n]||[];
+  blk.innerHTML='<h3>AI-murabbiy</h3><p class="note">Mavzu bo‘yicha savol bering yoki fikringizni yozing. Murabbiy javobni tayyor aytmaydi, savollar va maslahatlar bilan o‘ylashga yo‘naltiradi. Kuniga 30 ta xabar.</p>'+
+   '<div class="chat-log" id="chatLog"></div><form class="chat-form" id="chatForm"><input class="num" id="chatIn" maxlength="1500" placeholder="Savolingizni yozing…" autocomplete="off"><button class="btn-primary btn-sm" type="submit">Yuborish</button></form>';
+  function draw(){var el=$("#chatLog");el.innerHTML=log.map(function(m){return '<div class="chat-msg '+(m.role==="user"?"u":"a")+'">'+esc(m.content)+'</div>';}).join("");el.scrollTop=el.scrollHeight;}
+  draw();
+  $("#chatForm").addEventListener("submit",async function(e){
+    e.preventDefault();var inp=$("#chatIn"),t=inp.value.trim();if(!t)return;
+    inp.value="";log.push({role:"user",content:t});draw();
+    var btn=$("button",this);btn.disabled=true;
+    var r=await api("POST","coach",{module:n,messages:log});
+    btn.disabled=false;
+    if(r.status!==200){log.pop();draw();toast(r.data.error||"AI xatosi");inp.value=t;return;}
+    log.push({role:"assistant",content:r.data.reply});draw();
+  });
+}
+
+/* ---------- o'qituvchi: AI savol loyihalari ---------- */
+async function viewAiq(){
+  await ensureAi();
+  var html='<div class="section-head"><div class="eyebrow">O‘qituvchi vositasi</div><h2>AI bilan savol loyihasi</h2>'+
+   '<p class="lede">Mavzuni tanlang, AI test savolining loyihasini yozadi. Bu faqat <b>loyiha</b>: har bir savolni o‘zingiz tekshirib, kerak bo‘lsa tahrirlab, keyin kursga kiritasiz. AI xato qilishi mumkin: javob kaliti va izohni albatta tekshiring.</p></div>'+
+   (S.aiEnabled?'':'<div class="form-err">AI hozircha o‘chiq (API kaliti sozlanmagan).</div>')+
+   '<div class="panel pad" style="margin-bottom:18px"><div class="form-row"><div><label class="fld" for="q_mod">Mavzu</label><select id="q_mod">'+MODULES.map(function(m){return '<option value="'+m.n+'">'+m.n+'. '+esc(m.en)+'</option>';}).join("")+'</select></div>'+
+   '<div><label class="fld" for="q_cnt">Nechta savol</label><select id="q_cnt"><option>3</option><option>2</option><option>1</option><option>5</option></select></div>'+
+   '<div><button class="btn-primary" id="q_go"'+(S.aiEnabled?'':' disabled')+'>Loyiha yozish</button></div></div></div><div id="qOut"></div>';
+  return{html:html,title:"AI savollar",after:function(){
+    $("#q_go").addEventListener("click",async function(){
+      var b=this;b.disabled=true;b.textContent="AI yozmoqda… (15–40 soniya)";
+      var r=await api("POST","teacher/ai/questions",{module:+$("#q_mod").value,count:+$("#q_cnt").value});
+      b.disabled=false;b.textContent="Loyiha yozish";
+      if(r.status!==200){$("#qOut").innerHTML='<div class="form-err">'+esc(r.data.error||"AI xatosi")+'</div>';return;}
+      var L=["A","B","C","D"];
+      $("#qOut").innerHTML=r.data.questions.map(function(q,i){
+        return '<div class="qdraft"><div class="ai-tag">Loyiha '+(i+1)+' · '+esc(SKILLS[q.skill]?SKILLS[q.skill].k:"")+'</div>'+(q.p?'<p class="q-passage">'+esc(q.p)+'</p>':'')+
+         '<p class="q-text"><b>'+esc(q.t)+'</b></p>'+q.o.map(function(o,j){return '<div class="opt-line'+(j===q.a?" ok":"")+'">'+L[j]+'. '+esc(o)+(j===q.a?"  ✓":"")+'</div>';}).join("")+
+         '<p class="note" style="margin-top:8px">Izoh: '+esc(q.why)+'</p><div class="row-actions" style="margin-top:10px"><button data-copy="'+i+'">JSON nusxalash</button></div></div>';}).join("");
+      $$("[data-copy]").forEach(function(c){c.addEventListener("click",function(){
+        var q=r.data.questions[+c.dataset.copy];
+        navigator.clipboard.writeText(JSON.stringify({t:q.t,o:q.o,a:q.a,why:q.why,p:q.p||undefined},null,1)).then(function(){toast("Nusxalandi");},function(){toast("Nusxalab bo‘lmadi");});});});
+    });
   }};
 }
