@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CritiRead — tanqidiy fikrlash platformasi</title>
+<meta name="description" content="CTDF asosidagi tanqidiy fikrlash o‘lchov platformasi: 30 modul, rubrika, diagnostik test, CT-profil va statistika.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<a class="skip" href="#app">Asosiy mazmunga o‘tish</a>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#/"><span class="brand-name">CritiRead</span><span class="brand-sub">CTDF · Reading &amp; Writing</span></a>
+    <div class="spacer"></div>
+    <div id="userArea"></div>
+    <button class="icon-btn" id="themeBtn" aria-label="Mavzuni almashtirish" title="Yorug‘ / qorong‘i">◐</button>
+  </div>
+</header>
+<nav class="tabs" aria-label="Bo‘limlar"><div class="tabs-in" id="tabs"></div></nav>
+<main id="app" tabindex="-1"><div class="loading">Yuklanmoqda…</div></main>
+<footer><div><span>CritiRead · DSc dissertatsiyasi amaliy-eksperimental komponenti</span><span>Ma’lumotlar serverda saqlanadi</span></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/data.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

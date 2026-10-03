@@ -1,0 +1,8 @@
+name = "critiread-app"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "critiread"
+database_id = "b032c1ce-49bb-48bc-9ce2-909bfd065815"
