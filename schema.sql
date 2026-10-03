@@ -67,3 +67,16 @@ CREATE TABLE IF NOT EXISTS essays (
   graded_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_essays_status ON essays(status);
+
+-- Taklif havolalari: talaba o'zi ro'yxatdan o'tishi uchun (guruh, limit, muddat)
+CREATE TABLE IF NOT EXISTS invites (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  code TEXT NOT NULL UNIQUE,
+  grp TEXT NOT NULL DEFAULT '',
+  max_uses INTEGER NOT NULL,
+  used INTEGER NOT NULL DEFAULT 0,
+  expires_at INTEGER NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_by INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

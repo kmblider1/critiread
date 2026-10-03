@@ -83,7 +83,7 @@ async function route(){
   if(teacherOnly[r]&&S.user.role!=="teacher"){app.innerHTML='<section class="view">'+note("Bu bo‘lim o‘qituvchi uchun","Sizning hisobingiz talaba hisobi.")+'</section>';return;}
   if(studentOnly[r]&&S.user.role!=="student"){app.innerHTML='<section class="view">'+note("Bu bo‘lim talaba uchun","O‘qituvchi hisobida test va esse topshirilmaydi. Talabalar natijasini «Talabalar» bo‘limida ko‘ring.")+'</section>';return;}
   app.innerHTML='<div class="loading">Yuklanmoqda…</div>';
-  var views={"":viewHome,modules:viewModules,module:viewModule,login:viewLogin,account:viewAccount,test:viewTest,essay:viewEssay,profile:viewProfile,students:viewStudents,rubric:viewRubric,queue:viewQueue,research:viewResearch};
+  var views={"":viewHome,modules:viewModules,module:viewModule,login:viewLogin,join:viewJoin,account:viewAccount,test:viewTest,essay:viewEssay,profile:viewProfile,students:viewStudents,rubric:viewRubric,queue:viewQueue,research:viewResearch};
   var v=await (views[r]||viewHome)(arg);
   if(seq!==S.seq)return;
   app.innerHTML='<section class="view">'+v.html+'</section>';
@@ -371,8 +371,8 @@ async function viewProfile(arg){
 /* ---------- o'qituvchi: talabalar ---------- */
 function genPass(){var c="abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",a=new Uint32Array(12),o="";crypto.getRandomValues(a);for(var i=0;i<12;i++)o+=c[a[i]%c.length];return o;}
 async function viewStudents(){
-  var rs=await Promise.all([api("GET","teacher/students"),api("GET","teacher/panel")]);
-  var stus=rs[0].data.students||[],panel=rs[1].data;
+  var rs=await Promise.all([api("GET","teacher/students"),api("GET","teacher/panel"),api("GET","teacher/invites")]);
+  var stus=rs[0].data.students||[],panel=rs[1].data,invs=(rs[2].data&&rs[2].data.invites)||[];
   var weak=-1;if(panel.skillAvg){var mn=101;panel.skillAvg.forEach(function(v,i){if(v!==null&&v<mn){mn=v;weak=i;}});}
   var html='<div class="section-head"><div class="eyebrow">O‘qituvchi paneli</div><h2>Talabalar va guruh statistikasi</h2>'+
    '<p class="lede">Talaba hisoblarini siz yaratasiz. Har talaba faqat o‘z natijasini ko‘radi.</p></div>'+
@@ -388,7 +388,7 @@ async function viewStudents(){
    '<div><label class="fld" for="n_pass">Boshlang‘ich parol</label><input class="num" id="n_pass" value="'+genPass()+'" minlength="8" required></div>'+
    '<div><button class="btn-primary" type="submit">Yaratish</button></div></div><div id="newMsg"></div>'+
    '<p class="note" style="margin-top:10px">Parolni talabaga o‘zingiz yetkazing; u «Parol» orqali o‘zgartira oladi. Parol bazada xeshlangan holda saqlanadi, keyin ko‘rib bo‘lmaydi.</p></form></div>'+
-   '<div class="hero-cta no-print" style="margin:0 0 16px"><button class="btn-ghost" id="csvBtn">CSV yuklab olish</button></div>'+
+   invitePanel(invs)+'<div class="hero-cta no-print" style="margin:0 0 16px"><button class="btn-ghost" id="csvBtn">CSV yuklab olish</button></div>'+
    '<div class="tbl-wrap"><table id="statTable"><thead><tr id="statHead"></tr></thead><tbody id="statBody"></tbody></table></div>';
   return{html:html,title:"Talabalar",after:function(){
     var cols=[{k:"name",l:"Talaba"},{k:"grp",l:"Guruh"}].concat(SHORT.map(function(s,i){return{k:"c"+i,l:s,n:1};})).concat([{k:"ov",l:"Umumiy",n:1},{k:"g",l:"Baho"},{k:"d",l:"PRE/POST"},{k:"x",l:""}]);
@@ -418,6 +418,7 @@ async function viewStudents(){
         }});});
     }
     draw();
+    wireInvites();
     $("#newStu").addEventListener("submit",async function(e){e.preventDefault();
       var pass=$("#n_pass").value;
       var r=await api("POST","teacher/students",{name:$("#n_name").value,email:$("#n_email").value,grp:$("#n_grp").value,password:pass});
@@ -559,3 +560,61 @@ async function boot(){
   route();
 }
 boot();
+
+/* ---------- taklif havolalari (o'qituvchi) ---------- */
+function inviteLink(code){return location.origin+"/#/join/"+code;}
+function invitePanel(invs){
+  return '<div class="panel pad" style="margin-bottom:22px"><h3 style="font-size:20px;margin-bottom:6px">Talabalar uchun taklif havolasi</h3>'+
+   '<p class="note" style="margin-bottom:14px">Havolani guruhga yuboring: talaba o‘zi ism, email va parol bilan ro‘yxatdan o‘tadi va tanlangan guruhga tushadi. Limit tugasa yoki muddati o‘tsa havola ishlamaydi; istalgan vaqtda o‘chirishingiz mumkin.</p>'+
+   '<form id="newInvite"><div class="form-row">'+
+   '<div><label class="fld" for="i_grp">Guruh (E / N …)</label><input class="num" id="i_grp" maxlength="40"></div>'+
+   '<div><label class="fld" for="i_max">Nechta talaba (limit)</label><input class="num" id="i_max" type="number" min="1" max="500" value="30"></div>'+
+   '<div><label class="fld" for="i_days">Necha kun amal qiladi</label><input class="num" id="i_days" type="number" min="1" max="90" value="14"></div>'+
+   '<div><button class="btn-primary" type="submit">Havola yaratish</button></div></div></form><div id="invMsg"></div>'+
+   (invs.length?'<div style="margin-top:16px">'+invs.map(function(v){
+     var left=Math.max(0,Math.ceil((v.expires_at-Date.now())/86400000));
+     return '<div class="queue-item" style="cursor:default;flex-wrap:wrap"><div style="min-width:220px;flex:1"><b>'+(v.grp?esc(v.grp)+" guruhi":"Guruhsiz")+'</b> '+
+      (v.valid?'<span class="status-pill gr">faol</span>':'<span class="status-pill sub">yopiq</span>')+
+      '<div class="note">'+v.used+' / '+v.max_uses+' ro‘yxatdan o‘tdi · '+(v.valid?left+" kun qoldi":(v.active?"muddat/limit tugagan":"o‘chirilgan"))+'</div>'+
+      (v.valid?'<div class="note" style="word-break:break-all">'+esc(inviteLink(v.code))+'</div>':'')+'</div>'+
+      '<div class="row-actions">'+(v.valid?'<button data-inv="copy" data-code="'+esc(v.code)+'">Nusxalash</button><button data-inv="revoke" data-id="'+v.id+'">O‘chirish</button>':'')+'</div></div>';}).join("")+'</div>':'')+'</div>';
+}
+function wireInvites(){
+  var f=$("#newInvite");if(!f)return;
+  f.addEventListener("submit",async function(e){e.preventDefault();
+    var r=await api("POST","teacher/invites",{grp:$("#i_grp").value,max_uses:+$("#i_max").value,days:+$("#i_days").value});
+    if(r.status!==200){$("#invMsg").innerHTML='<div class="form-err">'+esc(r.data.error||"Xatolik")+'</div>';return;}
+    var link=inviteLink(r.data.code);
+    try{await navigator.clipboard.writeText(link);toast("Havola yaratildi va nusxalandi");}catch(x){toast("Havola yaratildi");}
+    route();});
+  $$("[data-inv]").forEach(function(b){b.addEventListener("click",async function(){
+    if(b.dataset.inv==="copy"){var l=inviteLink(b.dataset.code);try{await navigator.clipboard.writeText(l);toast("Havola nusxalandi");}catch(x){prompt("Havolani nusxalang:",l);}return;}
+    if(!confirm("Havola o‘chirilsinmi? Yangi talabalar u orqali kira olmaydi."))return;
+    var r=await api("POST","teacher/invites/"+b.dataset.id+"/revoke",{});toast(r.status===200?"Havola o‘chirildi":(r.data.error||"Xatolik"));route();});});
+}
+
+/* ---------- talaba: havola orqali ro'yxatdan o'tish ---------- */
+async function viewJoin(code){
+  if(S.user)return{html:'<div class="auth-wrap"><div class="auth-card"><h2>Siz tizimga kirgansiz</h2><p class="note" style="margin-top:8px">Yangi hisob yaratish uchun avval chiqing.</p><a class="btn-primary" href="#/" style="margin-top:20px">Bosh sahifa</a></div></div>',title:"Ro‘yxatdan o‘tish"};
+  var r=await api("GET","invites/"+encodeURIComponent(code||""));
+  if(!r.data.valid)return{html:'<div class="auth-wrap"><div class="auth-card"><div class="eyebrow">CritiRead</div><h2>Havola yaroqsiz</h2><p class="note" style="margin-top:8px">Taklif havolasining muddati tugagan, limiti to‘lgan yoki o‘chirilgan. O‘qituvchingizdan yangi havola so‘rang.</p><a class="btn-ghost" href="#/login" style="margin-top:20px">Hisobim bor — kirish</a></div></div>',title:"Ro‘yxatdan o‘tish"};
+  var html='<div class="auth-wrap"><form class="auth-card" id="joinForm"><div class="eyebrow">CritiRead'+(r.data.grp?" · "+esc(r.data.grp)+" guruhi":"")+'</div><h2>Ro‘yxatdan o‘tish</h2>'+
+   '<p class="note" style="margin-top:6px">Hisob yaratib, tanqidiy fikrlash kursiga qo‘shiling.</p>'+
+   '<div class="fld-row"><label class="fld" for="j_name">Ism-familiya</label><input class="num" id="j_name" autocomplete="name" required></div>'+
+   '<div class="fld-row"><label class="fld" for="j_email">Email</label><input class="num" id="j_email" type="email" autocomplete="username" required></div>'+
+   '<div class="fld-row"><label class="fld" for="j_pass">Parol (kamida 8 belgi)</label><input class="num" id="j_pass" type="password" autocomplete="new-password" minlength="8" required></div>'+
+   '<div class="fld-row"><label class="fld" for="j_pass2">Parolni takrorlang</label><input class="num" id="j_pass2" type="password" autocomplete="new-password" required></div>'+
+   '<div id="joinMsg"></div><button class="btn-primary" type="submit">Hisobni yaratish</button>'+
+   '<p class="note" style="margin-top:14px">Hisobingiz bor bo‘lsa, <a href="#/login">kiring</a>.</p></form></div>';
+  return{html:html,title:"Ro‘yxatdan o‘tish",after:function(){
+    $("#joinForm").addEventListener("submit",async function(e){e.preventDefault();
+      var msg=$("#joinMsg"),btn=$("button[type=submit]",this);msg.innerHTML="";
+      if($("#j_pass").value!==$("#j_pass2").value){msg.innerHTML='<div class="form-err">Parollar mos kelmadi</div>';return;}
+      btn.disabled=true;
+      var res=await api("POST","join",{code:code,name:$("#j_name").value,email:$("#j_email").value,password:$("#j_pass").value});
+      btn.disabled=false;
+      if(res.status!==200){msg.innerHTML='<div class="form-err">'+esc(res.data.error||"Xatolik")+'</div>';return;}
+      var me=await api("GET","me");S.user=me.data.user;S.quizzes=null;
+      toast("Xush kelibsiz, "+S.user.name);chrome();location.hash="#/test";});
+  }};
+}

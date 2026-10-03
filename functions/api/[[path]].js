@@ -155,6 +155,34 @@ async function route(req, env) {
     return json({ ok: true }, 200, { 'set-cookie': sessionCookie('', 0, secure) });
   }
 
+  // --- taklif havolasi orqali o'zi ro'yxatdan o'tish (ochiq) ---
+  if (seg[0] === 'invites' && seg[1] && method === 'GET') {
+    const row = await env.DB.prepare('SELECT grp,max_uses,used,expires_at,active FROM invites WHERE code=?').bind(seg[1].slice(0, 40)).first();
+    const valid = !!row && row.active === 1 && row.used < row.max_uses && row.expires_at > Date.now();
+    return json(valid ? { valid: true, grp: row.grp } : { valid: false });
+  }
+  if (path === 'join' && method === 'POST') {
+    const code = clean(body.code, 40), email = clean(body.email, 120).toLowerCase(), name = clean(body.name, 100), password = String(body.password || '');
+    if (!code || !validEmail(email) || !name || password.length < 8 || password.length > 200) return err(400, 'Ism, email va kamida 8 belgili parol kerak');
+    const inv = await env.DB.prepare('SELECT id,grp FROM invites WHERE code=? AND active=1 AND used<max_uses AND expires_at>?').bind(code, Date.now()).first();
+    if (!inv) return err(403, 'Taklif havolasi yaroqsiz yoki muddati tugagan');
+    const ex = await env.DB.prepare('SELECT id FROM users WHERE email=?').bind(email).first();
+    if (ex) return err(409, 'Bu email bilan hisob mavjud. Tizimga kiring');
+    // o'rinni band qilish (poyga holatiga qarshi): faqat bitta so'rov muvaffaqiyatli bo'ladi
+    const claim = await env.DB.prepare('UPDATE invites SET used=used+1 WHERE id=? AND active=1 AND used<max_uses AND expires_at>?').bind(inv.id, Date.now()).run();
+    if (!claim.meta.changes) return err(403, 'Taklif havolasi yaroqsiz yoki muddati tugagan');
+    const salt = newSalt();
+    let uid;
+    try {
+      const r = await env.DB.prepare('INSERT INTO users(email,name,role,grp,pass_hash,salt) VALUES(?,?,?,?,?,?)').bind(email, name, 'student', inv.grp, await hashPassword(password, salt), salt).run();
+      uid = r.meta.last_row_id;
+    } catch (e) {
+      await env.DB.prepare('UPDATE invites SET used=used-1 WHERE id=?').bind(inv.id).run();
+      return err(409, 'Bu email bilan hisob mavjud. Tizimga kiring');
+    }
+    return json({ ok: true }, 200, { 'set-cookie': await startSession(env, uid, secure) });
+  }
+
   // --- kirish talab qilinadi ---
   const user = await currentUser(req, env);
   if (!user) return err(401, 'Tizimga kiring');
@@ -248,6 +276,23 @@ async function route(req, env) {
       const salt = newSalt();
       const r = await env.DB.prepare('INSERT INTO users(email,name,role,grp,pass_hash,salt) VALUES(?,?,?,?,?,?)').bind(email, name, 'student', grp, await hashPassword(password, salt), salt).run();
       return json({ ok: true, id: r.meta.last_row_id });
+    }
+    if (sub === 'invites' && method === 'GET') {
+      const r = await env.DB.prepare('SELECT id,code,grp,max_uses,used,expires_at,active,created_at FROM invites ORDER BY id DESC LIMIT 50').all();
+      return json({ invites: r.results.map((x) => ({ ...x, valid: x.active === 1 && x.used < x.max_uses && x.expires_at > Date.now() })) });
+    }
+    if (sub === 'invites' && method === 'POST') {
+      const grp = clean(body.grp, 40);
+      const max = Math.min(500, Math.max(1, Math.floor(Number(body.max_uses) || 30)));
+      const days = Math.min(90, Math.max(1, Math.floor(Number(body.days) || 14)));
+      const code = b64(crypto.getRandomValues(new Uint8Array(12))).replace(/[+/=]/g, '').slice(0, 14);
+      await env.DB.prepare('INSERT INTO invites(code,grp,max_uses,expires_at,created_by) VALUES(?,?,?,?,?)').bind(code, grp, max, Date.now() + days * 86400000, user.id).run();
+      return json({ ok: true, code });
+    }
+    const iv = sub.match(/^invites\/(\d+)\/revoke$/);
+    if (iv && method === 'POST') {
+      await env.DB.prepare('UPDATE invites SET active=0 WHERE id=?').bind(Number(iv[1])).run();
+      return json({ ok: true });
     }
     const m = sub.match(/^students\/(\d+)\/(profile|reset-password|reset-diagnostic|group)$/);
     if (m) {

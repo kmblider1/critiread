@@ -127,5 +127,29 @@ ok((await S2.call('POST', 'login', { email: 's2@critiread.uz', password: 'reset-
 ok((await S1.call('POST', 'logout')).status === 200 && (await S1.call('GET', 'me')).status === 401, 'logout sessiyani tugatadi');
 ok((await T.call('POST', `teacher/students/${s2id}/reset-diagnostic`, { phase: 'post' })).status === 200, 'POST ni qayta ochish');
 
+console.log('13) taklif havolasi orqali o‘zi ro‘yxatdan o‘tish');
+const inv = (await T.call('POST', 'teacher/invites', { grp: 'E', max_uses: 2, days: 7 })).data;
+ok(inv.ok && inv.code && inv.code.length >= 10, 'havola yaratildi');
+ok((await anon.call('GET', 'invites/' + inv.code)).data.valid === true, 'havola yaroqli');
+ok((await anon.call('GET', 'invites/yoq-kod')).data.valid === false, 'noma’lum kod yaroqsiz');
+const J1 = new Client(), J2 = new Client(), J3 = new Client();
+ok((await J1.call('POST', 'join', { code: inv.code, name: 'Havola Bir', email: 'j1@critiread.uz', password: 'short' })).status === 400, 'qisqa parol rad');
+ok((await J1.call('POST', 'join', { code: 'noto-g-ri', name: 'X', email: 'j1@critiread.uz', password: 'join-pass-111' })).status === 403, 'noto‘g‘ri kod rad');
+ok((await J1.call('POST', 'join', { code: inv.code, name: 'Havola Bir', email: 'j1@critiread.uz', password: 'join-pass-111' })).status === 200, '1-talaba ro‘yxatdan o‘tdi');
+const me1 = (await J1.call('GET', 'me')).data.user;
+ok(me1.role === 'student' && me1.grp === 'E', 'rol student, guruh havoladan (E)');
+ok((await J1.call('GET', 'teacher/students')).status === 403, 'o‘zi ro‘yxatdan o‘tgan talaba o‘qituvchi API ga kira olmaydi');
+ok((await J3.call('POST', 'join', { code: inv.code, name: 'Dup', email: 'j1@critiread.uz', password: 'join-pass-333' })).status === 409, 'band email 409 (o‘rin sarflanmaydi)');
+ok((await J2.call('POST', 'join', { code: inv.code, name: 'Havola Ikki', email: 'j2@critiread.uz', password: 'join-pass-222' })).status === 200, '2-talaba ro‘yxatdan o‘tdi');
+ok((await J3.call('POST', 'join', { code: inv.code, name: 'Uchinchi', email: 'j3@critiread.uz', password: 'join-pass-333' })).status === 403, 'limit (2) tugagach rad');
+ok((await anon.call('GET', 'invites/' + inv.code)).data.valid === false, 'limit tugagach yaroqsiz');
+const inv2 = (await T.call('POST', 'teacher/invites', { grp: 'C', max_uses: 5, days: 1 })).data;
+const list = (await T.call('GET', 'teacher/invites')).data.invites;
+const row2 = list.find((x) => x.code === inv2.code);
+ok(row2 && row2.valid && row2.used === 0, 'ro‘yxatda ko‘rinadi');
+ok((await T.call('POST', `teacher/invites/${row2.id}/revoke`)).status === 200, 'havola o‘chirildi');
+ok((await J3.call('POST', 'join', { code: inv2.code, name: 'Uchinchi', email: 'j3@critiread.uz', password: 'join-pass-333' })).status === 403, 'o‘chirilgan havola rad');
+ok(((await T.call('GET', 'teacher/students')).data.students.filter((x) => x.email.startsWith('j')).length) === 2, 'faqat 2 ta talaba qo‘shilgan');
+
 console.log(`\nNatija: ${pass} o‘tdi, ${fail} muvaffaqiyatsiz`);
 process.exit(fail ? 1 : 0);
