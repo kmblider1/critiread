@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CritiRead — tanqidiy fikrlash platformasi</title>
+<meta name="description" content="CTDF asosidagi tanqidiy fikrlash o‘lchov platformasi: 30 modul, rubrika, diagnostik test, CT-profil va statistika.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --canvas:#ffffff; --band:#fafafb; --card:#f2f2f3; --hover:#ededee;
+  --ink:#17191c; --slate:#5d616b; --ash:#7d808a; --smoke:#a3a6af;
+  --line:#ececec; --line-2:#dcdce0;
+  --peach:#fbe1d1; --brown:#5d2a1a; --brown-soft:#8a4b38;
+  --pre-line:#c4c5ca; --ok:#2f6b3f; --ok-bg:#e4f1e7; --bad:#9b2c2c; --bad-bg:#f8e3e1;
+  --shadow-float:0 0 0 1px rgba(4,23,43,.05),0 20px 25px -5px rgba(0,0,0,.10),0 8px 10px -6px rgba(0,0,0,.10);
+  --r-card:24px; --r-elev:20px; --r-sm:16px; --r-pill:9999px;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --canvas:#141517; --band:#191b1e; --card:#1f2124; --hover:#282b2f;
+  --ink:#ececee; --slate:#a6a9b2; --ash:#8b8e98; --smoke:#6f727c;
+  --line:#2a2d31; --line-2:#383b41;
+  --peach:#3a2a22; --brown:#f0c9b3; --brown-soft:#d3a68e;
+  --pre-line:#4b4e56; --ok:#8fd0a0; --ok-bg:#1d3325; --bad:#f0a3a3; --bad-bg:#3a2121;
+  --shadow-float:0 0 0 1px rgba(255,255,255,.06),0 20px 25px -5px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:400;line-height:1.18;margin:0;text-wrap:balance}
+h1{letter-spacing:-.022em}h2{letter-spacing:-.016em}h3,h4{letter-spacing:-.011em}
+p{margin:0}
+a{color:var(--slate);text-underline-offset:3px}
+a:hover{color:var(--ink)}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
+::selection{background:var(--peach);color:var(--brown)}
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:var(--canvas);padding:8px 14px;border-radius:8px;z-index:100}
+.skip:focus{left:8px}
+[hidden]{display:none!important}
+
+/* ============ TOP BAR / TABS ============ */
+.topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--canvas) 92%,transparent);backdrop-filter:blur(8px)}
+.topbar-in{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;flex-direction:column;line-height:1;text-decoration:none;color:var(--ink)}
+.brand-name{font-family:var(--serif);font-size:23px;letter-spacing:-.02em}
+.brand-sub{font-size:12px;color:var(--ash);letter-spacing:.02em;margin-top:3px}
+.spacer{flex:1}
+.role-switch{display:flex;gap:6px}
+.pill-btn{border:1px solid var(--ink);background:transparent;height:36px;padding:0 15px;border-radius:var(--r-pill);font-size:14px;cursor:pointer;transition:.15s}
+.pill-btn[aria-pressed="true"]{background:var(--ink);color:var(--canvas)}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line-2);background:transparent;cursor:pointer;display:grid;place-items:center;font-size:16px}
+.icon-btn:hover{background:var(--card)}
+.tabs{position:sticky;top:65px;z-index:30;background:var(--canvas);border-bottom:1px solid var(--line)}
+.tabs-in{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tab{flex:none;border:0;background:transparent;color:var(--slate);cursor:pointer;text-decoration:none;
+  padding:13px 14px 11px;font-size:15px;border-bottom:2px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-current="page"]{color:var(--ink);border-bottom-color:var(--ink)}
+
+/* ============ LAYOUT ============ */
+main{max-width:1200px;margin:0 auto;padding:44px 24px 110px;min-height:70vh}
+.view{animation:rise .3s ease both}
+@keyframes rise{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:14px;color:var(--ash)}
+.lede{color:var(--slate);max-width:64ch;font-size:19px;line-height:1.5;text-wrap:pretty}
+.section-head{margin-bottom:32px;max-width:74ch}
+.section-head h2{font-size:clamp(28px,4vw,38px);line-height:1.2;margin:10px 0 12px}
+.split{display:grid;gap:28px}
+@media(min-width:960px){.split{grid-template-columns:1.12fr .88fr;align-items:start}}
+.divider{height:1px;background:var(--line);margin:44px 0}
+.crumbs{font-size:14px;color:var(--ash);margin-bottom:18px}
+.crumbs a{color:var(--slate)}
+
+/* ============ HERO / HOME ============ */
+.hero{display:grid;gap:44px;align-items:center;padding:20px 0 8px}
+@media(min-width:900px){.hero{grid-template-columns:1.02fr .98fr}}
+.hero h1{font-size:clamp(38px,6vw,62px);line-height:1.12;max-width:15ch;margin:16px 0 20px}
+.hero h1 em{font-style:italic}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.methodline{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:24px;font-size:14px;color:var(--ash)}
+.methodline b{color:var(--slate);font-weight:500}
+.artifact{background:var(--canvas);border:1px solid var(--line);border-radius:var(--r-elev);box-shadow:var(--shadow-float);padding:20px}
+.artifact .cap{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.artifact .cap span{font-size:14px;color:var(--ash)}
+.artifact .cap b{font-size:20px;font-weight:500}
+.parts{border-top:1px solid var(--line)}
+.part{display:grid;grid-template-columns:auto 1fr;gap:26px;padding:26px 4px;border-bottom:1px solid var(--line)}
+.part .no{font-size:15px;color:var(--ash);padding-top:6px}
+.part h3{font-size:24px;margin-bottom:8px}
+.part h3 a{color:inherit;text-decoration:none}
+.part h3 a:hover{text-decoration:underline}
+.part p{color:var(--slate);font-size:17px;max-width:74ch}
+.part.key{background:var(--peach);border-radius:var(--r-card);padding:28px 26px;margin:6px 0}
+.part.key .no,.part.key h3{color:var(--brown)}
+.part.key p{color:var(--brown-soft)}
+.tagx{display:inline-block;font-size:13px;color:var(--brown);border:1px solid var(--brown);border-radius:var(--r-pill);padding:3px 12px;margin-bottom:11px}
+.steps{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:6px}
+.step{background:var(--card);border-radius:var(--r-sm);padding:20px}
+.step b{font-family:var(--serif);font-size:30px;font-weight:400;color:var(--brown)}
+.step h4{font-size:18px;margin:6px 0 4px}
+.step p{font-size:14.5px;color:var(--slate)}
+
+/* ============ BUTTONS / FORM ============ */
+.btn-primary{background:var(--ink);color:var(--canvas);border:1px solid var(--ink);border-radius:var(--r-pill);padding:0 22px;height:44px;font-size:15px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;text-decoration:none}
+.btn-primary:hover{opacity:.88;color:var(--canvas)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1px solid var(--ink);color:var(--ink);border-radius:var(--r-pill);padding:0 22px;height:44px;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;text-decoration:none}
+.btn-ghost:hover{background:var(--card);color:var(--ink)}
+.btn-ghost:disabled{opacity:.35;cursor:not-allowed}
+label.fld{display:block;font-size:13px;color:var(--slate);margin-bottom:7px}
+select,input.num,textarea{font-family:var(--sans);font-size:15px;color:var(--ink);background:var(--canvas);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:11px 13px;width:100%}
+textarea{min-height:200px;resize:vertical;line-height:1.55}
+select:focus,input.num:focus,textarea:focus{border-color:var(--ink);outline:none}
+.note{font-size:13px;color:var(--ash);line-height:1.5}
+
+/* ============ MODULES ============ */
+.progress-line{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.progress-line .bar{flex:1;min-width:160px;height:8px;background:var(--card);border-radius:var(--r-pill);overflow:hidden}
+.progress-line .bar i{display:block;height:100%;background:var(--brown);border-radius:var(--r-pill);transition:width .4s}
+.filterbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.fbtn{border:1px solid var(--line-2);background:var(--canvas);color:var(--slate);border-radius:var(--r-pill);padding:8px 16px;font-size:14px;cursor:pointer}
+.fbtn:hover{color:var(--ink);border-color:var(--ink)}
+.fbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--canvas)}
+.search{max-width:340px;margin-bottom:24px}
+.mod-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(256px,1fr))}
+.mod{background:var(--card);border-radius:var(--r-sm);padding:18px 19px;display:flex;flex-direction:column;gap:8px;text-decoration:none;color:var(--ink);transition:background .15s;position:relative}
+.mod:hover{background:var(--hover);color:var(--ink)}
+.mod-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+.mod-n{color:var(--ash)}
+.mod-flag{color:var(--brown)}
+.mod h4{font-size:19px;line-height:1.2}
+.mod .uz{font-size:13.5px;color:var(--slate)}
+.mod .type{font-size:13px;color:var(--ash)}
+.badges{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:auto;padding-top:6px;font-size:13px;color:var(--ash)}
+.done-mark{position:absolute;right:14px;bottom:14px;width:22px;height:22px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:grid;place-items:center;font-size:13px;font-weight:600}
+
+/* module detail */
+.mod-hero{margin-bottom:30px}
+.mod-hero h2{font-size:clamp(30px,4.5vw,44px);margin:10px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{font-size:13px;border:1px solid var(--line-2);border-radius:var(--r-pill);padding:4px 12px;color:var(--slate)}
+.chip.core{border-color:var(--brown);color:var(--brown)}
+.blocks{display:grid;gap:16px}
+@media(min-width:900px){.blocks{grid-template-columns:1fr 1fr}.blocks .wide{grid-column:1/-1}}
+.block{background:var(--card);border-radius:var(--r-card);padding:24px}
+.block h3{font-size:20px;margin-bottom:10px}
+.block ul{margin:0;padding-left:20px;color:var(--slate)}
+.block li{margin:6px 0}
+.block p{color:var(--slate)}
+.example{border-left:3px solid var(--brown);padding:2px 0 2px 16px;font-family:var(--serif);font-size:18px;color:var(--ink)}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:30px;flex-wrap:wrap}
+
+/* quiz */
+.q-opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--canvas);border:1px solid var(--line-2);border-radius:14px;padding:12px 14px;margin-top:9px;cursor:pointer;font-size:15px;line-height:1.45}
+.q-opt:hover:not(:disabled){border-color:var(--ink)}
+.q-opt:disabled{cursor:default}
+.q-opt .k{flex:none;width:24px;height:24px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:12.5px;font-weight:500}
+.q-opt.sel{border-color:var(--ink)}
+.q-opt.right{background:var(--ok-bg);border-color:var(--ok)}
+.q-opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.q-why{margin-top:14px;font-size:14.5px;color:var(--slate);background:var(--canvas);border-radius:12px;padding:12px 14px}
+.q-text{font-size:17px;color:var(--ink)}
+.q-passage{font-family:var(--serif);font-size:17.5px;border-left:3px solid var(--line-2);padding-left:14px;margin:0 0 14px;color:var(--ink)}
+
+/* ============ PANELS / RUBRIC ============ */
+.panel{background:var(--card);border-radius:var(--r-card)}
+.panel.plain{background:var(--canvas);border:1px solid var(--line)}
+.pad{padding:24px}
+.grid2{display:grid;gap:16px}
+@media(min-width:520px){.grid2{grid-template-columns:1fr 1fr}}
+.rubric-crit{background:var(--card);border-radius:var(--r-sm);overflow:hidden;margin-bottom:12px}
+.rubric-crit summary{list-style:none;cursor:pointer;padding:15px 17px;display:flex;align-items:center;gap:13px}
+.rubric-crit summary::-webkit-details-marker{display:none}
+.crit-idx{width:26px;height:26px;flex:none;border-radius:8px;display:grid;place-items:center;background:var(--canvas);font-weight:500;font-size:13px}
+.crit-name{font-weight:500;font-size:15px}
+.crit-en{color:var(--ash);font-size:13px}
+.crit-score{margin-left:auto;font-size:13px;color:var(--slate);background:var(--canvas);border-radius:8px;padding:4px 10px;min-width:52px;text-align:center}
+.levels{display:grid;gap:8px;padding:0 17px 16px}
+@media(min-width:620px){.levels{grid-template-columns:1fr 1fr}}
+.lvl{display:flex;gap:10px;background:var(--canvas);border:1px solid transparent;border-radius:12px;padding:11px 13px;cursor:pointer;font-size:13.5px;position:relative}
+.lvl:hover{background:var(--hover)}
+.lvl input{position:absolute;opacity:0;pointer-events:none}
+.lvl .tag{font-size:12.5px;flex:none;width:46px;color:var(--ash)}
+.lvl .desc{color:var(--slate);line-height:1.4}
+.lvl:has(input:checked){border-color:var(--ink)}
+.lvl:has(input:checked) .tag,.lvl:has(input:checked) .desc{color:var(--ink)}
+.lvl:has(input:focus-visible){outline:2px solid var(--ink);outline-offset:2px}
+.result{position:sticky;top:130px}
+.result-card{background:var(--peach);border-radius:var(--r-card);padding:26px}
+.result-card .rl{font-size:14px;color:var(--brown-soft)}
+.bignum{font-family:var(--serif);font-size:64px;line-height:1;letter-spacing:-.03em;color:var(--brown)}
+.gradepill{display:inline-flex;align-items:center;font-weight:500;font-size:14px;padding:6px 15px;border-radius:var(--r-pill)}
+.gr5{background:var(--ink);color:var(--canvas)}
+.gr4{background:#5b5e66;color:#fff}
+.gr3{background:#d9d9dc;color:#17191c}
+.gr2{background:#ececed;color:#5d616b}
+.meter{height:8px;border-radius:var(--r-pill);background:rgba(128,80,60,.2);overflow:hidden;margin:16px 0 6px}
+.meter>i{display:block;height:100%;border-radius:var(--r-pill);background:var(--brown);transition:width .5s}
+.kv{display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-top:1px solid rgba(128,80,60,.2);color:var(--brown-soft)}
+.kv b{font-weight:500;color:var(--brown)}
+
+/* essay tool */
+.wc{display:flex;justify-content:space-between;font-size:13px;color:var(--ash);margin-top:8px}
+.checks{display:grid;gap:8px;margin-top:14px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;color:var(--slate)}
+.check .dot{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;font-size:11px;margin-top:2px}
+.check.ok{color:var(--ink)}
+.check.ok .dot{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+
+/* ============ PROFILE / RADAR ============ */
+.radar-wrap{width:100%;max-width:420px;margin:2px auto}
+.radar-wrap svg{width:100%;height:auto;display:block;overflow:visible}
+.skill-list{display:flex;flex-direction:column;gap:15px}
+.skill-row{display:grid;grid-template-columns:1fr auto;gap:7px 12px;align-items:center}
+.skill-row .nm{font-size:15px}
+.skill-row .nm em{color:var(--ash);font-style:normal;font-size:13px}
+.skill-row .val{font-size:14px;font-weight:500}
+.dualbar{grid-column:1/-1;height:7px;border-radius:var(--r-pill);background:var(--canvas);position:relative;overflow:hidden}
+.dualbar .pre,.dualbar .now{position:absolute;inset:0 auto 0 0;height:100%;border-radius:var(--r-pill)}
+.dualbar .pre{background:var(--pre-line)}
+.dualbar .now{background:var(--brown)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px;color:var(--slate);margin-top:16px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.advice{margin-top:18px;padding:16px 18px;background:var(--canvas);border-radius:14px;font-size:14.5px;color:var(--slate)}
+.advice b{color:var(--ink)}
+.tiles{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(158px,1fr))}
+.tile{background:var(--card);border-radius:var(--r-sm);padding:18px 19px}
+.tile .lab{font-size:13.5px;color:var(--slate)}
+.tile .big{font-size:30px;font-weight:500;margin-top:8px;line-height:1}
+.tile .sub{font-size:13px;color:var(--ash);margin-top:6px}
+.tile.hl{background:var(--peach)}
+.tile.hl .lab,.tile.hl .sub{color:var(--brown-soft)}
+.tile.hl .big{color:var(--brown)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--canvas)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-size:13px;color:var(--ash);font-weight:400;background:var(--canvas)}
+th button{background:none;border:0;cursor:pointer;color:inherit;font-size:inherit;padding:0}
+th button:hover{color:var(--ink)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--band)}
+tr.avg{background:var(--peach)}
+tr.avg td{font-weight:500;color:var(--brown)}
+.gpill{font-weight:500;padding:3px 10px;border-radius:var(--r-pill);font-size:13px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--canvas);padding:11px 20px;border-radius:var(--r-pill);font-size:14px;box-shadow:var(--shadow-float);opacity:0;pointer-events:none;transition:.3s;z-index:80}
+.toast.show{opacity:1;transform:translateX(-50%)}
+footer{border-top:1px solid var(--line);color:var(--ash);font-size:13px}
+footer div{max-width:1200px;margin:0 auto;padding:22px 24px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.locked{text-align:center;padding:60px 20px;color:var(--slate)}
+@media(max-width:600px){main{padding:30px 16px 90px}.topbar-in{padding:12px 16px}.brand-sub{display:none}.part{gap:14px}.tabs{top:61px}}
+@media print{.topbar,.tabs,footer,.hero-cta,.pager,.no-print{display:none!important}main{padding:0}body{background:#fff;color:#000}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#app">Asosiy mazmunga o‘tish</a>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#/"><span class="brand-name">CritiRead</span><span class="brand-sub">CTDF · Reading &amp; Writing</span></a>
+    <div class="spacer"></div>
+    <div class="role-switch" id="roleSwitch" role="group" aria-label="Rol">
+      <button class="pill-btn" data-role="student" aria-pressed="true">Talaba</button>
+      <button class="pill-btn" data-role="teacher" aria-pressed="false">O‘qituvchi</button>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="Mavzuni almashtirish" title="Yorug‘ / qorong‘i">◐</button>
+  </div>
+</header>
+<nav class="tabs" aria-label="Bo‘limlar"><div class="tabs-in" id="tabs"></div></nav>
+
+<main id="app" tabindex="-1"></main>
+
+<footer><div><span>CritiRead · DSc dissertatsiyasi amaliy-eksperimental komponenti</span><span>Demo ma’lumotlar · natijalar shu brauzerda saqlanadi</span></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ============ DATA ============ */
+var SKILLS=[{k:"Talqin",en:"interpretation"},{k:"Tahlil",en:"analysis"},{k:"Baholash",en:"evaluation"},
+ {k:"Xulosa",en:"inference"},{k:"Izohlash",en:"explanation"},{k:"O‘z-o‘zini boshqarish",en:"self-regulation"}];
+var SHORT=["Talqin","Tahlil","Baholash","Xulosa","Izohlash","O‘z-boshq."];
+var CRIT=[
+ {name:"Talqin",en:"interpretation",A:"mazmun, kontekst va yashirin ma’noni to‘liq tushunadi",B:"asosiy g‘oyani to‘g‘ri ajratadi, kichik noaniqlik",C:"umumiy mazmunni tushunadi, muhim jihatni o‘tkazadi",D:"matnni noto‘g‘ri / yuzaki tushunadi"},
+ {name:"Tahlil",en:"analysis",A:"argument tuzilishini (da’vo–asos–dalil) va bog‘lanishlarni aniq ko‘rsatadi",B:"asosiy argument va dalillarni ajratadi",C:"ayrim dalillarni topadi, tuzilma to‘liq emas",D:"dalil bilan faktni farqlay olmaydi"},
+ {name:"Baholash",en:"evaluation",A:"manba/dalil ishonchliligini mezon asosida asoslab baholaydi",B:"manbalarni baholaydi, ishonchlilikni belgilaydi",C:"yuzaki, mezonsiz baholaydi",D:"har qanday manbani tanqidsiz qabul qiladi"},
+ {name:"Xulosa",en:"inference",A:"dalilga asoslangan, izchil xulosa; muqobillarni hisobga oladi",B:"asosli, mantiqan izchil xulosa",C:"xulosa dalil bilan zaif bog‘langan",D:"asossiz yoki dalilga zid xulosa"},
+ {name:"Izohlash & bayon",en:"explanation, coherence",A:"pozitsiyani aniq, kogerent va akademik uslubda asoslaydi",B:"pozitsiya aniq, bayon izchil",C:"fikr bor, tuzilma tarqoq, asos yetishmaydi",D:"bayon chalkash, mavzudan chetga chiqadi"},
+ {name:"O‘z-o‘zini boshqarish",en:"self-regulation",A:"o‘z/peer ishini mezon asosida baholab, xatoni asoslab tuzatadi",B:"asosiy xatolarni topib tuzatadi",C:"yuzaki tekshiradi, tuzatish cheklangan",D:"qayta ko‘rib chiqmaydi, xatoni tan olmaydi"}
+];
+var PTS={A:5,B:4,C:3,D:2};
+var TASKS={reading:[0,1,2,3],writing:[1,2,3,4,5],peer:[2,4,5],diagnostic:[0,1,2,3,4,5]};
+var MTYPE={base:"Asosiy modul",reading:"Matn tahlili",position:"Muallif pozitsiyasi",evidence:"Dalil ↔ fakt",
+ source:"Manba baholash",essay:"Esse / insho",peer:"Peer & self-review",diagnostic:"Diagnostik test"};
+var TYPE2TASK={reading:"reading",position:"reading",evidence:"reading",source:"reading",essay:"writing",peer:"peer",diagnostic:"diagnostic",base:"reading"};
+var CORE={reading:1,position:1,evidence:1,source:1,essay:1,peer:1,diagnostic:1};
+
+function M(n,en,uz,type,ct,goal,idea,example,quiz){return{n:n,en:en,uz:uz,type:type,ct:ct,goal:goal,idea:idea,example:example,quiz:quiz};}
+function Q(t,o,a,why){return{t:t,o:o,a:a,why:why};}
+var MODULES=[
+ M(1,"Introduction to Academic Reading","Akademik o‘qishga kirish","base",[],
+  ["Akademik matn belgilarini tanish","O‘qish maqsadini oldindan belgilash"],
+  "Akademik matn ma’lum tuzilishga ega: sarlavha, annotatsiya, kirish, asosiy qism, xulosa. O‘qishdan oldin maqsad qo‘yish diqqatni boshqaradi.",
+  "Before reading: ‘What do I need from this text — the main claim, the evidence, or a definition?’",
+  Q("Which part of an article usually states the main claim most concisely?",["The reference list","The abstract","The acknowledgements","The footnotes"],1,"Annotatsiya (abstract) maqolaning asosiy da’vosi va natijasini qisqa beradi.")),
+ M(2,"Skimming and Scanning","Tez va tanlab o‘qish strategiyalari","base",[],
+  ["Skimming va scanning farqini bilish","Vaqtni tejaydigan o‘qish usulini tanlash"],
+  "Skimming — umumiy g‘oyani olish uchun tez ko‘z yugurtirish. Scanning — aniq ma’lumot (sana, ism, raqam) qidirish.",
+  "To find the year a study was published, you scan; to decide whether an article is relevant, you skim.",
+  Q("You need the exact sample size in a research article. Which strategy fits best?",["Skimming","Scanning","Intensive reading","Rereading everything"],1,"Aniq raqam qidirilganda scanning ishlatiladi.")),
+ M(3,"Close Reading & Text Analysis","Chuqur o‘qish va matn tahlili","reading",["Talqin","Tahlil"],
+  ["Matn ostidagi ma’noni ochish","Til tanlovi (leksika, ton) orqali muallif maqsadini ko‘rish"],
+  "Close reading — matnni jumlama-jumla o‘qib, nima aytilgani, qanday aytilgani va nima uchun shunday aytilganini so‘rash.",
+  "‘The so-called experts…’ — the phrase ‘so-called’ signals doubt about the experts’ authority.",
+  Q("What does the phrase ‘so-called experts’ most likely signal?",["Respect for the experts","The author doubts their expertise","A neutral description","A definition of the term"],1,"‘So-called’ ko‘pincha shubha yoki istehzo bildiradi — bu yashirin ma’no (talqin).")),
+ M(4,"Identifying the Author’s Position","Muallif pozitsiyasini aniqlash","position",["Tahlil","Xulosa"],
+  ["Muallifning da’vosini ajratish","Aniq va yashirin pozitsiyani farqlash"],
+  "Pozitsiya ko‘pincha sarlavhada, kirish oxirida yoki xulosada keladi. Ba’zan u faqat ton va tanlangan dalillar orqali seziladi.",
+  "‘Although remote work has costs, its benefits clearly outweigh them.’ — the position is after ‘although’.",
+  Q("‘Although remote work has costs, its benefits clearly outweigh them.’ What is the author’s position?",["Remote work is harmful","Remote work is overall beneficial","Remote work has no effect","Remote work should be banned"],1,"‘Although …’ qismi imtiyoz, asosiy da’vo esa ikkinchi qismda.")),
+ M(5,"Facts, Opinions & Claims","Fakt, fikr va da’voni farqlash","evidence",["Tahlil","Baholash"],
+  ["Tekshirish mumkin bo‘lgan gapni ajratish","Da’vo va uni qo‘llab-quvvatlovchi dalilni farqlash"],
+  "Fakt — tekshirib bo‘ladigan gap. Fikr — baho yoki his. Da’vo — isbot talab qiladigan fikr, dalil bilan mustahkamlanadi.",
+  "‘The city has 12 libraries.’ (fact) vs ‘Libraries are the best places to study.’ (opinion).",
+  Q("Which sentence is a verifiable fact?",["Winter is the most depressing season.","The river is 120 km long.","This is a beautiful bridge.","People should walk more."],1,"Uzunlikni o‘lchab tekshirish mumkin; qolganlari baho yoki tavsiya.")),
+ M(6,"Building an Argument: Thesis","Argument qurish: tezis bayoni","essay",["Izohlash","Xulosa"],
+  ["Bahslashsa bo‘ladigan tezis yozish","Tezisni aniq va tor doirada ifodalash"],
+  "Yaxshi tezis — mavzu emas, balki bahs qilsa bo‘ladigan da’vo. U ‘nima’ va ‘nima uchun’ ga javob beradi.",
+  "Weak: ‘This essay is about social media.’ Strong: ‘Social media weakens sustained attention in teenagers.’",
+  Q("Which is the strongest thesis statement?",["Social media exists.","This essay discusses social media.","Social media weakens sustained attention in teenagers.","Many people use social media."],2,"Faqat u bahslashsa bo‘ladigan, aniq da’vo.")),
+ M(7,"Structuring an Argumentative Essay","Argumentativ esse tuzilmasi","essay",["Izohlash","Xulosa"],
+  ["Esse tuzilmasini rejalashtirish","Qarshi fikrni hisobga olish"],
+  "Tuzilma: kirish (tezis) → asosiy paragraflar (da’vo–dalil–izoh) → qarshi fikr va rad etish → xulosa.",
+  "A counter-argument paragraph begins: ‘Critics may argue that… However, …’",
+  Q("What is the role of a counter-argument paragraph?",["To weaken the thesis","To show other views and respond to them","To summarise the introduction","To add more statistics"],1,"Qarshi fikrni ko‘rsatib, rad etish argumentni kuchaytiradi.")),
+ M(8,"Supporting Claims with Evidence","Da’voni dalil bilan asoslash","essay",["Izohlash","Xulosa"],
+  ["Dalil turlarini ajratish (statistika, ekspert, misol)","Dalilni da’voga izoh bilan bog‘lash"],
+  "Dalil o‘z-o‘zidan gapirmaydi: har bir dalildan keyin ‘bu nimani isbotlaydi’ degan izoh kerak (CEE: Claim–Evidence–Explanation).",
+  "Claim: later start helps. Evidence: grades rose 8%. Explanation: rested students concentrate better.",
+  Q("In the Claim–Evidence–Explanation model, what does ‘Explanation’ do?",["Repeats the claim","Links the evidence to the claim","Introduces a new topic","Cites the source"],1,"Izoh dalil da’voni nega qo‘llab-quvvatlashini ko‘rsatadi.")),
+ M(9,"Peer Review & Self-Assessment","O‘zaro va o‘z-o‘zini baholash","peer",["O‘z-o‘zini boshqarish"],
+  ["Mezon asosida fikr bildirish","Fikrdan so‘ng matnni qayta ishlash"],
+  "Foydali fikr: aniq, mezonga tayangan va tuzatish yo‘lini ko‘rsatadi (‘Da’vo dalilsiz — statistika qo‘shing’).",
+  "Useful: ‘Your second paragraph lacks evidence; add a source.’ Not useful: ‘Good job.’",
+  Q("Which peer comment is the most useful?",["Nice essay!","I did not like it.","The second paragraph has a claim but no evidence — add a source.","Too long."],2,"Aniq, mezonli va tuzatish yo‘lini ko‘rsatadi.")),
+ M(10,"Evidence vs. Inference","Dalil va xulosani farqlash","evidence",["Tahlil","Baholash"],
+  ["Kuzatilgan dalil va undan chiqarilgan xulosani ajratish","Xulosa chegaralarini belgilash"],
+  "Dalil — kuzatilgan yoki o‘lchangan narsa. Xulosa — undan chiqarilgan fikr, u har doim ehtimoliy.",
+  "Evidence: ‘The lights are off.’ Inference: ‘Nobody is home’ (could be asleep).",
+  Q("‘The ground is wet.’ Which of these is an inference, not evidence?",["The ground is wet.","It rained.","The grass is green.","The path is stone."],1,"Yomg‘ir yog‘gani — taxmin; sabab boshqa bo‘lishi ham mumkin (sug‘orish).")),
+ M(11,"Vocabulary in Context","Kontekstdagi leksika","base",[],
+  ["Noma’lum so‘z ma’nosini kontekstdan taxmin qilish"],
+  "Atrofdagi so‘zlar (sinonim, qarama-qarshilik, misol) noma’lum so‘z ma’nosiga ishora beradi.",
+  "‘The arid region, with almost no rain, …’ → arid = dry.",
+  Q("‘The arid region, with almost no rain, struggled to grow crops.’ What does ‘arid’ mean?",["Wet","Dry","Cold","Crowded"],1,"‘Almost no rain’ ishorasi.")),
+ M(12,"Cohesion & Coherence","Bog‘lamlar va matn izchilligi","base",[],
+  ["Bog‘lovchi vositalarni to‘g‘ri tanlash","G‘oyalarni mantiqiy tartibga solish"],
+  "Cohesion — grammatik bog‘lovchilar (however, therefore). Coherence — g‘oyalar mantiqan izchilligi.",
+  "‘He studied hard; therefore, he passed.’ vs ‘…; however, he passed.’ (illogical).",
+  Q("Choose the best connector: ‘The test was difficult; ___, most students passed.’",["therefore","however","for example","similarly"],1,"Qarama-qarshilik bildiradi: qiyin edi, lekin o‘tishdi.")),
+ M(13,"Writing a Response Essay","Javob-esse yozish","essay",["Izohlash","Xulosa"],
+  ["Matnga o‘z pozitsiyangiz bilan javob berish","Matndan iqtibosni to‘g‘ri ishlatish"],
+  "Javob-esse: 1) muallif da’vosini xolis bayon, 2) o‘z pozitsiya, 3) matn va tajribadan dalillar.",
+  "‘The author argues that… I partly agree, because… ’",
+  Q("A response essay should begin its body by…",["Ignoring the text","Fairly summarising the author’s claim","Attacking the author","Listing references"],1,"Avval xolis bayon, keyin javob.")),
+ M(14,"Summarizing & Paraphrasing","Xulosalash va parafraz","base",[],
+  ["Asosiy g‘oyani qisqa ifodalash","Ma’noni saqlab, so‘z va tuzilmani o‘zgartirish"],
+  "Summary — faqat asosiy g‘oya. Paraphrase — to‘liq ma’no, boshqa so‘z bilan. Ikkalasida ham manba ko‘rsatiladi.",
+  "Original: ‘Sleep deprivation impairs memory.’ Paraphrase: ‘Lack of sleep harms recall.’",
+  Q("Which is an acceptable paraphrase of ‘Sleep deprivation impairs memory’?",["Sleep deprivation impairs memory.","Lack of sleep harms the ability to recall.","Memory is impaired by sleep deprivation.","Sleep is good."],1,"Ma’no saqlangan, so‘z va tuzilma yangi.")),
+ M(15,"Diagnostic (Pre-test)","Diagnostik test — boshlang‘ich","diagnostic",["Barcha 6 ko‘nikma"],
+  ["Boshlang‘ich CT-darajasini aniqlash"],
+  "Pre-test eksperiment boshidagi darajani o‘lchaydi. Natija bahoga kirmaydi, faqat profil uchun.",
+  "12 savol, har ko‘nikmadan 2 tadan; natija CT-profilga yoziladi.",
+  Q("Why is the pre-test not graded?",["It is too easy","It sets a baseline to measure growth","It is optional","It tests grammar"],1,"U o‘sishni o‘lchash uchun boshlang‘ich nuqtani beradi.")),
+ M(16,"Analyzing Complex Texts","Murakkab matnlar tahlili","reading",["Talqin","Tahlil"],
+  ["Uzun, murakkab jumlalarni bo‘laklarga ajratish","Asosiy va qo‘shimcha g‘oyani farqlash"],
+  "Murakkab gapni bo‘lakla: ega–kesim, so‘ng izohlovchi qismlar. Asosiy g‘oya odatda bosh gapda.",
+  "‘The policy, which was widely criticised, reduced costs.’ → main: the policy reduced costs.",
+  Q("In ‘The policy, which was widely criticised, reduced costs’, what is the main idea?",["The policy was criticised","The policy reduced costs","Costs were criticised","Critics reduced costs"],1,"Bosh gap: the policy reduced costs.")),
+ M(17,"Reading for Implied Meaning","Yashirin ma’noni o‘qish","base",[],
+  ["Aytilmagan, lekin nazarda tutilgan ma’noni topish"],
+  "Implikatsiya — muallif to‘g‘ridan-to‘g‘ri aytmagan, lekin matn orqali ko‘rsatgan fikr.",
+  "‘She checked her watch for the third time.’ → she is impatient or late.",
+  Q("‘She checked her watch for the third time.’ What is implied?",["She likes watches","She is impatient or worried about time","She is hungry","She is angry at the watch"],1,"Takrorlangan harakat sabrsizlikni bildiradi.")),
+ M(18,"Note-taking & Annotation","Qayd olish va izohlash","base",[],
+  ["Matnda da’vo va dalilni belgilash","Qisqa, tizimli qayd yuritish"],
+  "Annotatsiya: da’voni tagiga chizing, dalilni ramkaga oling, chetga savol yozing.",
+  "Margin note: ‘Evidence? Only one study.’",
+  Q("What is the main purpose of margin questions while reading?",["To decorate the text","To keep an active, questioning stance","To save time","To avoid rereading"],1,"Savol berish — faol, tanqidiy o‘qish belgisi.")),
+ M(19,"Genre Awareness","Janrni anglash","base",[],
+  ["Janr xususiyatlarini ajratish (maqola, tahririyat, blog)"],
+  "Janr maqsad va auditoriyani belgilaydi: ilmiy maqola — isbot, tahririyat — ishontirish, blog — shaxsiy fikr.",
+  "An editorial uses persuasive language; a research article reports methods and results.",
+  Q("Which genre is most likely to contain a ‘Methods’ section?",["Editorial","Research article","Blog post","Advertisement"],1,"Ilmiy maqolada metodologiya bo‘limi bo‘ladi.")),
+ M(20,"Register & Tone","Uslub va ton","base",[],
+  ["Rasmiy va norasmiy uslubni farqlash","Auditoriyaga mos ton tanlash"],
+  "Akademik uslub: aniq, xolis, qisqartmalarsiz. Ton muallifning munosabatini bildiradi.",
+  "‘Kids these days can’t focus’ → informal, judgmental. ‘Adolescents show reduced sustained attention’ → academic.",
+  Q("Which sentence is the most academic?",["Kids can’t focus anymore.","Adolescents show reduced sustained attention.","Everybody knows teens are distracted.","It’s crazy how distracted teens are."],1,"Xolis, aniq, norasmiy so‘zlarsiz.")),
+ M(21,"Critical Reading of Articles","Ilmiy maqolani tanqidiy o‘qish","reading",["Talqin","Tahlil"],
+  ["Maqola metodologiyasini baholash","Da’vo va natija mosligini tekshirish"],
+  "Tanqidiy o‘quvchi so‘raydi: namuna yetarlimi? Metod mosmi? Xulosa natijadan oshib ketmaganmi?",
+  "A study of 12 students cannot prove a claim about ‘all students’.",
+  Q("A study of 12 students concludes ‘this method works for all learners’. What is the problem?",["The topic is wrong","The sample is too small to generalise","The method is old","The study is too short"],1,"Kichik namunadan keng umumlashtirish noto‘g‘ri.")),
+ M(22,"Integrating Sources","Manbalarni matnga singdirish","base",[],
+  ["Manbani o‘z argumentingizga singdirish","Iqtibos va parafrazni muvozanatlash"],
+  "Manba argumentingizga xizmat qilishi kerak: kirish iborasi → iqtibos/parafraz → o‘z izohingiz.",
+  "‘According to Smith (2020), … This suggests that …’",
+  Q("After quoting a source, a strong writer should…",["Move on immediately","Explain how it supports the claim","Add another quote","Delete the claim"],1,"Izohsiz iqtibos argumentni kuchaytirmaydi.")),
+ M(23,"Evaluating Source Credibility","Manba ishonchliligini baholash","source",["Baholash"],
+  ["Manbani mezonlar bilan baholash (muallif, nashr, dalil, manfaat to‘qnashuvi)"],
+  "Mezonlar: muallif vakolati, nashr turi (peer-reviewed), dalillar, aktuallik, manfaatlar to‘qnashuvi.",
+  "A peer-reviewed journal is generally more reliable than an anonymous blog.",
+  Q("Which source is generally the most credible for a medical claim?",["An anonymous forum","A peer-reviewed journal article","A company advert","A celebrity post"],1,"Peer-review mustaqil ekspert tekshiruvidan o‘tgan.")),
+ M(24,"Citation & Academic Integrity","Iqtibos va akademik halollik","base",[],
+  ["Plagiatning oldini olish","Iqtibos uslubini qo‘llash"],
+  "Boshqa birovning g‘oyasi, so‘zi yoki ma’lumotini manbasiz berish — plagiat. Parafraz ham manba talab qiladi.",
+  "Even a perfect paraphrase needs a citation.",
+  Q("Do you need to cite a paraphrase?",["No, it is your wording","Yes, the idea still belongs to the source","Only for books","Only for quotes"],1,"G‘oya manbaga tegishli, shuning uchun ko‘rsatiladi.")),
+ M(25,"Synthesizing Multiple Texts","Bir nechta manbani sintezlash","base",[],
+  ["Manbalar o‘rtasidagi o‘xshashlik va farqni ko‘rish"],
+  "Sintez — manbalarni ketma-ket bayon qilish emas, ularni mavzu bo‘yicha birlashtirib, yangi fikrga kelish.",
+  "‘Both A and B agree on X, but differ on Y because …’",
+  Q("Synthesis differs from summary because it…",["Is shorter","Connects sources around an idea","Ignores sources","Uses quotes only"],1,"Sintez manbalarni mavzu atrofida bog‘laydi.")),
+ M(26,"Detecting Bias & Assumptions","Xolislik va farazlarni aniqlash","source",["Baholash"],
+  ["Yashirin farazni topish","Tarafkash til va tanlab dalil keltirishni ko‘rish"],
+  "Tarafkashlik: hissiy so‘zlar, bir tomonlama dalil, qarshi fikrni e’tiborsiz qoldirish. Faraz — isbotsiz qabul qilingan asos.",
+  "‘Obviously, only fools disagree.’ — emotional language, no argument.",
+  Q("Which phrase most clearly signals bias?",["According to the data","Only fools would disagree","The sample was 400 people","Results varied"],1,"Hissiy, haqoratli til — dalil o‘rniga bosim.")),
+ M(27,"Reliability of Online Sources","Onlayn manbalar ishonchliligi","source",["Baholash"],
+  ["Veb-sahifani tez baholash (SIFT usuli)"],
+  "SIFT: Stop (to‘xta), Investigate the source (manbani o‘rgan), Find better coverage (boshqa manbani top), Trace claims (asl manbaga qayt).",
+  "Before sharing a viral statistic, trace it to the original study.",
+  Q("In the SIFT method, what does ‘Trace’ mean?",["Copy the claim","Go back to the original source of the claim","Delete the page","Share it"],1,"Da’voni asl manbagacha kuzatib borish.")),
+ M(28,"Writing a Critical Review","Tanqidiy taqriz yozish","essay",["Izohlash","Xulosa"],
+  ["Matn kuchli va zaif tomonlarini baholash","Baholashni dalil bilan asoslash"],
+  "Taqriz: qisqa bayon → baholash mezonlari → kuchli/zaif tomonlar (dalil bilan) → umumiy xulosa.",
+  "‘The study’s strength is its design; its weakness is a small sample (n = 12).’",
+  Q("A good critical review…",["Only praises the text","Only criticises the text","Judges strengths and weaknesses with evidence","Retells the plot"],2,"Muvozanatli va dalilga tayangan baholash.")),
+ M(29,"Revising & Editing","Qayta ishlash va tahrir","base",[],
+  ["Qayta ishlash (mazmun) va tahrir (til) bosqichlarini farqlash"],
+  "Avval mazmun va tuzilma (revision), keyin grammatika va imlo (editing).",
+  "Revise: add evidence to paragraph 2. Edit: fix ‘their/there’.",
+  Q("What should you do first?",["Fix commas","Check ideas and structure","Change font","Count words"],1,"Avval mazmun, keyin til.")),
+ M(30,"Diagnostic (Post-test)","Diagnostik test — yakuniy","diagnostic",["Barcha 6 ko‘nikma"],
+  ["Yakuniy CT-darajasini aniqlash","Pre-testga nisbatan o‘sishni ko‘rish"],
+  "Post-test pre-test bilan bir xil tuzilishda; farq (Cohen’s d) eksperiment samaradorligini ko‘rsatadi.",
+  "Compare pre and post per skill in the CT-profile.",
+  Q("What is compared to measure the effect of the course?",["Post-test with pre-test","Two different topics","Grades only","Attendance"],0,"Pre va post natijalar solishtiriladi."))
+];
+
+/* diagnostik test: 12 savol, har ko‘nikmadan 2 */
+var TEST=[
+ {s:0,p:"“The library closed early, not because of budget cuts, but because the heating failed.”",t:"What was the reason for the early closure?",o:["Budget cuts","Heating failure","Staff shortage","A holiday"],a:1,why:"‘Not because of … but because of …’ — sabab ikkinchi qism."},
+ {s:0,p:"“Not everyone who is quiet is shy.”",t:"Which statement matches this meaning?",o:["Quiet people are never shy","Some quiet people are not shy","All shy people are loud","Nobody is quiet"],a:1,why:"‘Not everyone’ — hammasi emas, ba’zilari."},
+ {s:1,p:"“Schools should start later. Teenagers sleep less than they need, and studies show that later starts improve grades.”",t:"Which part is the evidence?",o:["Schools should start later","Teenagers sleep less than they need","Studies show later starts improve grades","The whole passage"],a:2,why:"Dalil — tadqiqotlar ko‘rsatgan natija; birinchi gap da’vo."},
+ {s:1,p:"",t:"Which sentence is a fact, not an opinion?",o:["Libraries are the best places to study.","The city has 12 libraries.","Reading is more fun than TV.","Libraries should open later."],a:1,why:"Faqat sonni tekshirib bo‘ladi."},
+ {s:2,p:"",t:"Which source is most reliable for a claim about vaccine effectiveness?",o:["A social-media post","A peer-reviewed medical journal","A product advert","An anonymous blog"],a:1,why:"Peer-review ekspert tekshiruvi."},
+ {s:2,p:"“A study funded by a soft-drink company concludes that its drink is healthy.”",t:"What is the main concern?",o:["The study is too long","Possible conflict of interest","The drink is sweet","The study is old"],a:1,why:"Moliyalashtiruvchi natijadan manfaatdor."},
+ {s:3,p:"“Every student who submitted the project passed. Dilshod did not pass.”",t:"What can be inferred?",o:["Dilshod submitted late","Dilshod did not submit the project","Dilshod failed the exam","The project was hard"],a:1,why:"Topshirganlarning hammasi o‘tgan; o‘tmagan bo‘lsa — topshirmagan."},
+ {s:3,p:"“Sales rose 20% after the advertising campaign.”",t:"Which conclusion is best supported?",o:["The campaign caused the rise","The campaign may have contributed; other factors are not ruled out","The campaign failed","Sales always rise after ads"],a:1,why:"Ketma-ketlik sabab degani emas."},
+ {s:4,p:"",t:"Which sentence works best as a thesis statement?",o:["This essay is about homework.","Homework is given in many schools.","Excessive homework reduces students’ motivation to learn.","I have a lot of homework."],a:2,why:"Bahslashsa bo‘ladigan aniq da’vo."},
+ {s:4,p:"Claim: “Social media harms attention.”",t:"Which support is strongest?",o:["Everyone says so","Data from a study plus an explanation of the link","A personal feeling","A famous quote"],a:1,why:"Dalil + izoh."},
+ {s:5,p:"",t:"A peer says your claim has no evidence. What is the best response?",o:["Ignore it","Add evidence and revise the paragraph","Delete the claim","Argue with the peer"],a:1,why:"Fikrni mezon asosida qayta ishlash."},
+ {s:5,p:"“Everyone I asked agrees, so it must be true.”",t:"What is wrong with this reasoning?",o:["Nothing","Small sample and popularity is not proof","It uses statistics","It is too formal"],a:1,why:"Ommabop fikr isbot emas; namuna kichik."}
+];
+
+/* ============ STATE ============ */
+function ST(id,name,group,pre,cur){return{id:id,name:name,group:group,pre:pre,cur:cur.slice(),count:[9,9,9,9,9,9]};}
+var STUDENTS=[
+ ST("s1","Dilnoza Karimova","201-A",[54,50,46,52,49,44],[76,72,66,74,70,63]),
+ ST("s2","Jasur Toshpo‘latov","201-A",[58,55,50,57,53,49],[72,70,64,71,66,60]),
+ ST("s3","Malika Rahimova","201-A",[49,47,44,48,45,41],[70,68,62,69,65,58]),
+ ST("s4","Sardor Aliyev","201-B",[52,49,45,50,47,43],[68,65,60,66,62,56]),
+ ST("s5","Nigora Yusupova","201-B",[60,57,53,59,55,51],[81,78,72,79,75,68]),
+ ST("s6","Bekzod Karimov","201-B",[45,43,40,44,42,38],[64,61,57,62,58,52]),
+ ST("s7","Sevara Ismoilova","202-A",[55,52,48,53,50,46],[74,71,66,72,68,61]),
+ ST("s8","Otabek Nazarov","202-A",[50,48,45,49,46,42],[69,66,61,67,63,57]),
+ ST("s9","Kamola Ergasheva","202-A",[57,54,50,55,52,48],[78,75,69,76,72,65]),
+ ST("s10","Farrux Qodirov","202-B",[47,45,42,46,43,39],[66,63,58,64,60,54])
+];
+var S={role:"student",theme:null,stu:"s1",done:{},sort:{k:"name",d:1}};
+var KEY="critiread.v2";
+function getStu(id){for(var i=0;i<STUDENTS.length;i++){if(STUDENTS[i].id===id)return STUDENTS[i];}return STUDENTS[0];}
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY)||"null");if(r){S.role=r.role||S.role;S.theme=r.theme||null;S.stu=r.stu||S.stu;S.done=r.done||{};
+  if(r.students){r.students.forEach(function(x){var s=getStu(x.id);if(s&&x.cur&&x.count){s.cur=x.cur;s.count=x.count;}});}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({role:S.role,theme:S.theme,stu:S.stu,done:S.done,
+  students:STUDENTS.map(function(s){return{id:s.id,cur:s.cur,count:s.count};})}));}catch(e){}}
+function resetAll(){try{localStorage.removeItem(KEY);}catch(e){}location.reload();}
+
+/* ============ HELPERS ============ */
+var $=function(s,r){return(r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function mean(a){return a.reduce(function(x,y){return x+y;},0)/a.length;}
+function grade(p){return p>=90?5:p>=70?4:p>=60?3:2;}
+function gradeCls(g){return g===5?"gr5":g===4?"gr4":g===3?"gr3":"gr2";}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove("show");},2400);}
+function isCore(m){return !!CORE[m.type];}
+function stuOptions(sel){return STUDENTS.map(function(s){return '<option value="'+s.id+'"'+(s.id===sel?" selected":"")+'>'+esc(s.name)+' — '+s.group+'</option>';}).join("");}
+function applyTheme(){
+  var t=S.theme||(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  document.documentElement.setAttribute("data-theme",t);
+}
+
+/* SVG radar */
+function radarSVG(series,size){
+  size=size||360;var c=size/2,R=size/2-58,n=6,rings=[20,40,60,80,100];
+  function pt(i,v){var a=-Math.PI/2+i*2*Math.PI/n;return[c+R*v/100*Math.cos(a),c+R*v/100*Math.sin(a)];}
+  var g='';
+  rings.forEach(function(r){g+='<polygon points="'+SKILLS.map(function(_,i){return pt(i,r).join(",");}).join(" ")+'" fill="none" stroke="var(--line-2)" stroke-width="1"/>';});
+  SKILLS.forEach(function(_,i){var p=pt(i,100);g+='<line x1="'+c+'" y1="'+c+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="var(--line)" />';});
+  rings.forEach(function(r){var p=pt(0,r);g+='<text x="'+(p[0]+4)+'" y="'+(p[1]+3)+'" font-size="9" fill="var(--smoke)">'+r+'</text>';});
+  series.forEach(function(s){
+    var pts=s.vals.map(function(v,i){return pt(i,v).join(",");}).join(" ");
+    g+='<polygon points="'+pts+'" fill="'+(s.fill||"none")+'" stroke="'+s.color+'" stroke-width="'+(s.w||2)+'"'+(s.dash?' stroke-dasharray="5 4"':'')+' stroke-linejoin="round"/>';
+    if(!s.dash)s.vals.forEach(function(v,i){var p=pt(i,v);g+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3.4" fill="'+s.color+'"><title>'+SKILLS[i].k+': '+v+'%</title></circle>';});
+  });
+  SHORT.forEach(function(l,i){var a=-Math.PI/2+i*2*Math.PI/n,x=c+(R+22)*Math.cos(a),y=c+(R+22)*Math.sin(a);
+    var anc=Math.abs(Math.cos(a))<.25?"middle":(Math.cos(a)>0?"start":"end");
+    g+='<text x="'+x+'" y="'+(y+4)+'" font-size="12" text-anchor="'+anc+'" fill="var(--slate)" font-family="Inter,sans-serif">'+l+'</text>';});
+  return '<svg viewBox="0 0 '+size+' '+size+'" role="img" aria-label="CT-profil radar diagrammasi">'+g+'</svg>';
+}
+
+/* ============ ROUTER ============ */
+var TABS=[
+ {r:"",l:"Bosh sahifa"},{r:"modules",l:"Mavzular (30)"},{r:"test",l:"Diagnostik test"},
+ {r:"rubric",l:"Topshiriq baholash"},{r:"profile",l:"CT-profil"},
+ {r:"stats",l:"Statistika",t:1},{r:"research",l:"Tadqiqot (Cohen’s d)",t:1}
+];
+function renderTabs(cur){
+  $("#tabs").innerHTML=TABS.filter(function(t){return !t.t||S.role==="teacher";}).map(function(t){
+    var on=(cur===t.r)||(t.r==="modules"&&cur==="module");
+    return '<a class="tab" href="#/'+t.r+'"'+(on?' aria-current="page"':'')+'>'+t.l+'</a>';}).join("");
+}
+function route(){
+  var h=location.hash.replace(/^#\/?/,"").split("/"),r=h[0]||"",arg=h[1];
+  renderTabs(r);
+  var app=$("#app");
+  var teacherOnly={stats:1,research:1};
+  if(teacherOnly[r]&&S.role!=="teacher"){
+    app.innerHTML='<section class="view"><div class="locked"><h2 style="font-size:30px;margin-bottom:10px">Bu bo‘lim o‘qituvchi uchun</h2><p>Yuqoridagi «O‘qituvchi» rejimini yoqing.</p><p style="margin-top:20px"><button class="btn-primary" id="goTeacher">O‘qituvchi rejimi</button></p></div></section>';
+    $("#goTeacher").addEventListener("click",function(){setRole("teacher");});
+    document.title="CritiRead";return;
+  }
+  var views={"":viewHome,modules:viewModules,module:viewModule,test:viewTest,rubric:viewRubric,profile:viewProfile,stats:viewStats,research:viewResearch};
+  var v=(views[r]||viewHome)(arg);
+  app.innerHTML='<section class="view">'+v.html+'</section>';
+  document.title=(v.title?v.title+" · ":"")+"CritiRead";
+  if(v.after)v.after();
+  window.scrollTo(0,0);
+}
+function setRole(r){S.role=r;save();syncRole();route();toast(r==="teacher"?"O‘qituvchi rejimi":"Talaba rejimi");}
+function syncRole(){$$("#roleSwitch button").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.role===S.role?"true":"false");});}
+
+/* ============ VIEWS ============ */
+function viewHome(){
+  var s=getStu("s5"),ov=Math.round(mean(s.cur));
+  var doneN=Object.keys(S.done).length;
+  var html='<div class="hero"><div>'+
+   '<div class="eyebrow">DSc dissertatsiyasi · amaliy-eksperimental komponent</div>'+
+   '<h1>Tanqidiy fikrlashni <em>o‘lchaydigan</em> raqamli o‘quv muhiti</h1>'+
+   '<p class="lede">Bo‘lajak ingliz tili o‘qituvchilari uchun “Reading and Writing” fani misolida. Har topshiriq tanqidiy fikrlash mezonlari bo‘yicha baholanadi va talabaning CT-profilini shakllantiradi.</p>'+
+   '<div class="hero-cta"><a class="btn-primary" href="#/test">Diagnostik testni boshlash</a><a class="btn-ghost" href="#/modules">Mavzularni ko‘rish</a></div>'+
+   '<div class="methodline"><span><b>Model:</b> CTDF</span><span><b>Darajalar:</b> CEFR</span><span><b>Standart:</b> Paul–Elder</span><span><b>Ko‘nikma:</b> Facione ×6</span></div>'+
+   (doneN?'<p class="note" style="margin-top:14px">Siz '+doneN+' ta mavzuni bajargansiz. <a href="#/modules">Davom eting →</a></p>':'')+
+   '</div><div class="artifact"><div class="cap"><span>Namuna — talaba CT-profili</span><b>'+ov+'%</b></div><div class="radar-wrap">'+
+   radarSVG([{vals:s.pre,color:"var(--pre-line)",dash:1,w:1.5},{vals:s.cur,color:"var(--brown)",fill:"rgba(140,80,56,.14)"}],330)+'</div></div></div>'+
+   '<div class="divider"></div><div class="section-head"><div class="eyebrow">Qanday ishlaydi</div><h2>To‘rt qadamda CT-profil</h2></div>'+
+   '<div class="steps">'+
+   '<div class="step"><b>1</b><h4>Pre-test</h4><p>12 savollik diagnostika boshlang‘ich darajani aniqlaydi.</p></div>'+
+   '<div class="step"><b>2</b><h4>Mavzular</h4><p>30 modul: nazariya, namuna, mashq.</p></div>'+
+   '<div class="step"><b>3</b><h4>Rubrika</h4><p>Topshiriq 6×4 mezon bo‘yicha baholanadi.</p></div>'+
+   '<div class="step"><b>4</b><h4>Post-test va d</h4><p>O‘sish Cohen’s d bilan o‘lchanadi.</p></div></div>'+
+   '<div class="divider"></div><div class="section-head"><div class="eyebrow">To‘rt asosiy bo‘lim</div><h2>Platforma tuzilishi</h2></div>'+
+   '<div class="parts">'+
+   '<div class="part"><div class="no">01</div><div><h3><a href="#/modules">Mavzular (modullar)</a></h3><p>Dastur bo‘yicha 30 ketma-ket modul: matn bilan ishlash, dalil–xulosani farqlash, muallif pozitsiyasini tahlil qilish, manbalarni qiyoslash va argumentlangan yozma matn yaratish — nazariy material, namunalar va mashqlar bilan.</p></div></div>'+
+   '<div class="part"><div class="no">02</div><div><h3><a href="#/rubric">Topshiriqlar</a></h3><p>O‘qish va yozishga oid topshiriqlar: matn tahlili, ochiq savollar, muqobil nuqtai nazarni baholash, esse va insho. Mustaqil hamda guruhli bajarish formatlarini qamrab oladi.</p></div></div>'+
+   '<div class="part"><div class="no">03</div><div><h3><a href="#/profile">Baholash tizimi</a></h3><p>Topshiriqlar avtomatlashtirilgan va kriterial (rubrikaga asoslangan) tarzda baholanadi; natijalar talaba kabinetida to‘planadi va o‘qituvchiga statistik tahlil ko‘rinishida taqdim etiladi.</p></div></div>'+
+   '<div class="part key"><div class="no">04</div><div><span class="tagx">Alohida, mustaqil bo‘lim</span><h3><a href="#/test">Tanqidiy fikrlash malakasini baholash</a></h3><p>Facione ajratgan olti ko‘nikma — talqin, tahlil, baholash, xulosa chiqarish, izohlash va o‘z-o‘zini boshqarish — bo‘yicha olib boriladi. CCTST asosidagi diagnostik testlar, kriterial rubrika hamda dinamik ko‘rsatkichlar orqali har bir talabaning darajasi ham sonli, ham sifatli baholanadi va monitoring qilinadi.</p></div></div>'+
+   '</div>';
+  return{html:html,title:""};
+}
+
+/* modules list */
+var modFilter="all",modQuery="";
+function viewModules(){
+  var doneN=MODULES.filter(function(m){return S.done[m.n]!==undefined;}).length;
+  var html='<div class="section-head"><div class="eyebrow">Reading &amp; Writing · o‘quv dasturi</div><h2>30 modul — topshiriq turlari va CT-ko‘nikma bog‘lanishi</h2>'+
+   '<p class="lede">Tanqidiy fikrlash eng kuchli ishlaydigan mavzular CT-yadro deb belgilangan. 15 va 30-modullar — eksperimental o‘lchov (pre/post), bahoga kirmaydi.</p></div>'+
+   '<div class="progress-line"><span class="tnum" style="font-size:14px;color:var(--slate)">Bajarilgan: <b>'+doneN+' / 30</b></span><div class="bar"><i style="width:'+(doneN/30*100)+'%"></i></div></div>'+
+   '<div class="filterbar" id="modFilter" role="group" aria-label="Filtr">'+
+   [["all","Barchasi"],["core","CT-yadro"],["read","O‘qish & tahlil"],["write","Yozma ish"],["source","Manba baholash"],["diag","Diagnostika"]].map(function(f){
+     return '<button class="fbtn" data-f="'+f[0]+'" aria-pressed="'+(modFilter===f[0])+'">'+f[1]+'</button>';}).join("")+'</div>'+
+   '<input class="num search" id="modSearch" type="search" placeholder="Mavzu qidirish…" aria-label="Mavzu qidirish" value="'+esc(modQuery)+'">'+
+   '<div class="mod-grid" id="modGrid"></div>';
+  return{html:html,title:"Mavzular",after:function(){
+    function draw(){
+      var sets={read:["reading","position","evidence"],write:["essay"],source:["source"],diag:["diagnostic","peer"]};
+      var q=modQuery.trim().toLowerCase();
+      var list=MODULES.filter(function(m){
+        var okF=modFilter==="all"||(modFilter==="core"&&isCore(m))||(sets[modFilter]&&sets[modFilter].indexOf(m.type)>=0);
+        var okQ=!q||(m.en+" "+m.uz+" "+MTYPE[m.type]).toLowerCase().indexOf(q)>=0;
+        return okF&&okQ;});
+      $("#modGrid").innerHTML=list.length?list.map(function(m){
+        return '<a class="mod" href="#/module/'+m.n+'"><div class="mod-top"><span class="mod-n">Modul '+m.n+'</span>'+(isCore(m)?'<span class="mod-flag">CT-yadro</span>':'')+'</div>'+
+         '<h4>'+m.en+'</h4><div class="uz">'+m.uz+'</div><div class="type">'+MTYPE[m.type]+'</div>'+
+         '<div class="badges">'+(m.ct.length?m.ct.map(function(c){return '<span>'+c+'</span>';}).join(" · "):'<span>Til ko‘nikmasi</span>')+'</div>'+
+         (S.done[m.n]!==undefined?'<span class="done-mark" title="Bajarilgan" aria-label="Bajarilgan">✓</span>':'')+'</a>';}).join(""):
+        '<p class="note">Hech narsa topilmadi.</p>';
+    }
+    draw();
+    $$("#modFilter .fbtn").forEach(function(b){b.addEventListener("click",function(){modFilter=b.dataset.f;
+      $$("#modFilter .fbtn").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});draw();});});
+    $("#modSearch").addEventListener("input",function(){modQuery=this.value;draw();});
+  }};
+}
+
+/* module detail */
+var rubricPreset=null;
+function viewModule(arg){
+  var n=parseInt(arg,10),m=MODULES[n-1];
+  if(!m)return viewModules();
+  var prev=MODULES[n-2],next=MODULES[n];
+  var html='<div class="crumbs"><a href="#/modules">Mavzular</a> / Modul '+m.n+'</div>'+
+   '<div class="mod-hero"><div class="eyebrow">Modul '+m.n+' / 30 · '+MTYPE[m.type]+'</div><h2>'+m.en+'</h2><p class="lede">'+m.uz+'</p>'+
+   '<div class="chips">'+(isCore(m)?'<span class="chip core">CT-yadro</span>':'')+m.ct.map(function(c){return '<span class="chip">'+c+'</span>';}).join("")+
+   (S.done[m.n]!==undefined?'<span class="chip" style="color:var(--ok);border-color:var(--ok)">✓ Bajarilgan</span>':'')+'</div></div>'+
+   '<div class="blocks">'+
+   '<div class="block"><h3>O‘quv maqsadlari</h3><ul>'+m.goal.map(function(g){return '<li>'+g+'</li>';}).join("")+'</ul></div>'+
+   '<div class="block"><h3>Asosiy g‘oya</h3><p>'+m.idea+'</p></div>'+
+   '<div class="block wide"><h3>Namuna</h3><div class="example">'+m.example+'</div></div>'+
+   '<div class="block wide"><h3>Mashq</h3><div id="quizBox"></div></div>'+
+   '</div>'+
+   '<div class="hero-cta no-print"><a class="btn-ghost" href="#/rubric" id="toRubric" data-task="'+TYPE2TASK[m.type]+'">Shu turdagi topshiriqni baholash →</a></div>'+
+   '<div class="pager">'+(prev?'<a class="btn-ghost" href="#/module/'+prev.n+'">← '+prev.n+'. '+esc(prev.uz)+'</a>':'<span></span>')+
+   (next?'<a class="btn-ghost" href="#/module/'+next.n+'">'+next.n+'. '+esc(next.uz)+' →</a>':'<a class="btn-primary" href="#/profile">CT-profilga o‘tish →</a>')+'</div>';
+  return{html:html,title:"Modul "+m.n,after:function(){
+    var q=m.quiz,box=$("#quizBox"),letters=["A","B","C","D"];
+    box.innerHTML='<p class="q-text">'+q.t+'</p>'+q.o.map(function(o,i){return '<button class="q-opt" data-i="'+i+'"><span class="k">'+letters[i]+'</span><span>'+esc(o)+'</span></button>';}).join("")+'<div id="qWhy"></div>';
+    function lock(sel){
+      $$(".q-opt",box).forEach(function(b){var i=+b.dataset.i;b.disabled=true;
+        if(i===q.a)b.classList.add("right");else if(i===sel)b.classList.add("wrong");});
+      $("#qWhy").innerHTML='<div class="q-why"><b>'+(sel===q.a?"To‘g‘ri. ":"Noto‘g‘ri. ")+'</b>'+q.why+'</div>';
+    }
+    if(S.done[m.n]!==undefined){lock(S.done[m.n]);}
+    $$(".q-opt",box).forEach(function(b){b.addEventListener("click",function(){
+      var i=+b.dataset.i;S.done[m.n]=i;save();lock(i);toast(i===q.a?"To‘g‘ri javob ✓":"Izohni o‘qing");});});
+    $("#toRubric").addEventListener("click",function(){rubricPreset=this.dataset.task;});
+  }};
+}
+
+/* diagnostik test */
+var testState=null;
+function viewTest(){
+  var html='<div class="section-head"><div class="eyebrow">Facione 6 ko‘nikma · CCTST ruhida</div><h2>Diagnostik test</h2>'+
+   '<p class="lede">12 savol, har ko‘nikmadan 2 tadan. Natija CT-profilga yoziladi. Taxminan 8–10 daqiqa.</p></div><div id="testRoot"></div>';
+  return{html:html,title:"Diagnostik test",after:function(){
+    if(!testState)testState={i:0,ans:[],fin:false};
+    drawTest();}};
+}
+function drawTest(){
+  var root=$("#testRoot"),T=testState;
+  if(T.fin){return drawTestResult(root);}
+  var q=TEST[T.i],L=["A","B","C","D"];
+  var pc=Math.round(T.i/TEST.length*100);
+  root.innerHTML='<div class="split"><div class="panel pad">'+
+   '<div class="progress-line"><span class="tnum note">Savol '+(T.i+1)+' / '+TEST.length+'</span><div class="bar"><i style="width:'+pc+'%"></i></div></div>'+
+   (q.p?'<p class="q-passage">'+q.p+'</p>':'')+'<p class="q-text">'+q.t+'</p>'+
+   q.o.map(function(o,i){return '<button class="q-opt'+(T.ans[T.i]===i?" sel":"")+'" data-i="'+i+'"><span class="k">'+L[i]+'</span><span>'+esc(o)+'</span></button>';}).join("")+
+   '<div class="pager"><button class="btn-ghost" id="tPrev"'+(T.i?"":" disabled")+'>← Oldingi</button>'+
+   '<button class="btn-primary" id="tNext"'+(T.ans[T.i]===undefined?" disabled":"")+'>'+(T.i===TEST.length-1?"Yakunlash":"Keyingi →")+'</button></div></div>'+
+   '<div class="panel pad"><h3 style="font-size:20px;margin-bottom:10px">Ko‘rsatma</h3><ul class="note" style="padding-left:18px;line-height:1.7"><li>Har savolda bitta to‘g‘ri javob bor.</li><li>Javobni o‘zgartirish mumkin.</li><li>Natija bahoga kirmaydi, faqat profil uchun.</li></ul></div></div>';
+  $$(".q-opt",root).forEach(function(b){b.addEventListener("click",function(){T.ans[T.i]=+b.dataset.i;drawTest();});});
+  $("#tPrev").addEventListener("click",function(){T.i--;drawTest();});
+  $("#tNext").addEventListener("click",function(){if(T.i===TEST.length-1){T.fin=true;}else{T.i++;}drawTest();window.scrollTo(0,0);});
+}
+function testScores(){
+  var sc=[0,0,0,0,0,0],mx=[0,0,0,0,0,0];
+  TEST.forEach(function(q,i){mx[q.s]++;if(testState.ans[i]===q.a)sc[q.s]++;});
+  return sc.map(function(v,i){return Math.round(v/mx[i]*100);});
+}
+var TIPS=["Matn mazmuni va yashirin ma’noni sekin o‘qib, o‘z so‘zingiz bilan ayting (3, 17-modullar).","Da’vo, dalil va faktni ajratishga mashq qiling (5, 10-modullar).","Manbani mezon bilan baholang (23, 26, 27-modullar).","Dalildan nimaga xulosa chiqarilishini, muqobil tushuntirishlarni o‘ylang (10, 21-modullar).","Tezis + dalil + izoh (CEE) tuzilmasida yozing (6–8-modullar).","Fikr-mulohazadan so‘ng matnni qayta ishlang (9, 29-modullar)."];
+function drawTestResult(root){
+  var p=testScores(),ov=Math.round(mean(p)),weak=p.indexOf(Math.min.apply(null,p));
+  var right=testState.ans.filter(function(a,i){return a===TEST[i].a;}).length;
+  root.innerHTML='<div class="split"><div class="panel plain pad"><div class="radar-wrap">'+radarSVG([{vals:p,color:"var(--brown)",fill:"rgba(140,80,56,.14)"}],400)+'</div></div>'+
+   '<div><div class="tiles" style="margin-bottom:14px"><div class="tile hl"><div class="lab">Umumiy natija</div><div class="big">'+ov+'%</div><div class="sub">baho '+grade(ov)+' · '+right+' / '+TEST.length+' to‘g‘ri</div></div>'+
+   '<div class="tile"><div class="lab">Eng zaif ko‘nikma</div><div class="big" style="font-size:20px">'+SKILLS[weak].k+'</div><div class="sub">'+p[weak]+'%</div></div></div>'+
+   '<div class="panel pad"><h3 style="font-size:19px;margin-bottom:6px">Ko‘nikmalar kesimi</h3><div class="skill-list" style="margin-top:14px">'+
+   SKILLS.map(function(s,i){return '<div class="skill-row"><div class="nm">'+s.k+' <em>'+s.en+'</em></div><div class="val tnum">'+p[i]+'%</div><div class="dualbar"><span class="now" style="width:'+p[i]+'%"></span></div></div>';}).join("")+
+   '</div><div class="advice"><b>Tavsiya:</b> '+TIPS[weak]+'</div></div>'+
+   '<div class="no-print" style="margin-top:16px"><label class="fld" for="applySel">Natijani qaysi talaba profiliga yozish?</label><select id="applySel">'+stuOptions(S.stu)+'</select></div>'+
+   '<div class="hero-cta no-print"><button class="btn-primary" id="applyTest">Profilga yozish</button><button class="btn-ghost" id="retest">Qayta topshirish</button></div></div></div>'+
+   '<h3 style="font-size:22px;margin:40px 0 14px">Javoblar tahlili</h3>'+
+   TEST.map(function(q,i){var ok=testState.ans[i]===q.a;
+     return '<div class="block" style="margin-bottom:10px"><div class="note">'+(i+1)+'. '+SKILLS[q.s].k+' · <b style="color:'+(ok?"var(--ok)":"var(--bad)")+'">'+(ok?"to‘g‘ri":"noto‘g‘ri")+'</b></div><p class="q-text" style="margin:4px 0">'+q.t+'</p>'+
+     '<p class="note">To‘g‘ri javob: <b>'+esc(q.o[q.a])+'</b>'+(ok?'':' · sizniki: '+esc(q.o[testState.ans[i]]||"—"))+'. '+q.why+'</p></div>';}).join("");
+  $("#applyTest").addEventListener("click",function(){
+    var stu=getStu($("#applySel").value);
+    stu.cur=stu.cur.map(function(v,i){return Math.round((v+p[i])/2);});
+    S.stu=stu.id;save();toast(stu.name+" — profil yangilandi");location.hash="#/profile";});
+  $("#retest").addEventListener("click",function(){testState=null;route();});
+}
+
+/* rubrika */
+function viewRubric(){
+  var task=rubricPreset||"reading";rubricPreset=null;
+  var html='<div class="section-head"><div class="eyebrow">Kriterial baholash · Facione 6 × 4</div><h2>Topshiriqni tanqidiy fikrlash mezonlari bo‘yicha baholash</h2>'+
+   '<p class="lede">Topshiriq turini tanlang — faqat unga tegishli mezonlar chiqadi. Ball, CT-foizi, baho va talaba CT-profili avtomatik hisoblanadi.</p></div>'+
+   '<div class="split"><div><div class="panel pad" style="margin-bottom:18px"><div class="grid2">'+
+   '<div><label class="fld" for="stuSel">Talaba</label><select id="stuSel">'+stuOptions(S.stu)+'</select></div>'+
+   '<div><label class="fld" for="taskSel">Topshiriq turi</label><select id="taskSel">'+
+   [["reading","O‘qish / matn tahlili — mezon 1–4"],["writing","Yozma / esse-insho — mezon 2–6"],["peer","Peer & self-review — 3, 5, 6"],["diagnostic","Diagnostik test — barcha 6"]].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===task?" selected":"")+'>'+o[1]+'</option>';}).join("")+
+   '</select></div></div></div><div id="rubricArea"></div>'+
+   '<div id="essayTool"></div></div>'+
+   '<div class="result"><div class="result-card"><div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px"><div><div class="rl">CT bahosi</div><div class="bignum" id="pctOut">—</div></div><span class="gradepill gr5" id="gradeOut">baho —</span></div>'+
+   '<div class="meter"><i id="meterBar" style="width:0%"></i></div>'+
+   '<div class="kv"><span>To‘plangan ball</span><b id="sumOut">0</b></div><div class="kv"><span>Maksimal ball</span><b id="maxOut">0</b></div><div class="kv"><span>Baholangan mezon</span><b id="critOut">0</b></div>'+
+   '<div style="margin-top:18px;display:flex;gap:10px"><button class="btn-primary" id="applyBtn" style="flex:1">Profilga qo‘llash</button><button class="btn-ghost" id="resetBtn">Tozalash</button></div>'+
+   '<p class="note" style="margin-top:13px;color:var(--brown-soft)">CT% = (ball ÷ maks) × 100 · 90–100 → 5 · 70–89 → 4 · 60–69 → 3 · 0–59 → 2.</p></div></div></div>';
+  return{html:html,title:"Topshiriq baholash",after:function(){
+    $("#stuSel").addEventListener("change",function(){S.stu=this.value;save();});
+    $("#taskSel").addEventListener("change",drawRubric);
+    $("#resetBtn").addEventListener("click",drawRubric);
+    $("#rubricArea").addEventListener("change",compute);
+    $("#applyBtn").addEventListener("click",function(){
+      var applied=0,stu=getStu(S.stu);
+      $$("#rubricArea details").forEach(function(d){
+        var c=$("input:checked",d);if(!c)return;
+        var ci=+d.dataset.ci,pp=PTS[c.value]/5*100,oc=stu.count[ci],ov=stu.cur[ci];
+        stu.cur[ci]=Math.round((ov*oc+pp)/(oc+1));stu.count[ci]=oc+1;applied++;});
+      if(!applied){toast("Avval mezonlarni belgilang");return;}
+      save();toast(stu.name+" — profil yangilandi ("+applied+" mezon)");});
+    drawRubric();
+  }};
+}
+function drawRubric(){
+  var task=$("#taskSel").value,ids=TASKS[task],area=$("#rubricArea");
+  area.innerHTML=ids.map(function(ci){var c=CRIT[ci];
+    return '<details class="rubric-crit" open data-ci="'+ci+'"><summary><span class="crit-idx">'+(ci+1)+'</span><span><span class="crit-name">'+c.name+'</span> <span class="crit-en">'+c.en+'</span></span><span class="crit-score" data-score>—</span></summary><div class="levels">'+
+     ["A","B","C","D"].map(function(L){return '<label class="lvl"><input type="radio" name="c'+ci+'" value="'+L+'"><span class="tag">'+(L==="D"?"D · 1–2":L+" · "+PTS[L])+'</span><span class="desc">'+c[L]+'</span></label>';}).join("")+'</div></details>';}).join("");
+  var et=$("#essayTool");
+  if(task==="writing"){
+    et.innerHTML='<div class="panel pad" style="margin-top:18px"><h3 style="font-size:20px;margin-bottom:10px">Esse yozish va o‘z-o‘zini tekshirish</h3>'+
+     '<p class="note" style="margin-bottom:10px">Matnni shu yerga yozing — tuzilma belgilari avtomatik tekshiriladi (matn saqlanmaydi).</p>'+
+     '<label class="fld" for="essay">Esse matni</label><textarea id="essay" placeholder="Thesis, evidence, counter-argument, conclusion…"></textarea>'+
+     '<div class="wc"><span id="wcWords">0 so‘z</span><span id="wcSent">0 gap</span></div><div class="checks" id="essayChecks"></div></div>';
+    $("#essay").addEventListener("input",essayCheck);essayCheck();
+  }else et.innerHTML="";
+  compute();
+}
+function essayCheck(){
+  var t=$("#essay").value,words=(t.trim().match(/\S+/g)||[]).length,sent=(t.match(/[^.!?]+[.!?]+/g)||[]).length;
+  $("#wcWords").textContent=words+" so‘z";$("#wcSent").textContent=sent+" gap";
+  var low=t.toLowerCase();
+  var items=[
+   ["Yetarli hajm (150+ so‘z)",words>=150],
+   ["Tezis belgisi (argue, claim, believe, thesis, should)",/\b(argue|claim|believe|thesis|should|must|i think|in my opinion)\b/.test(low)],
+   ["Dalil keltirilgan (study, data, research, according to, %)",/\b(study|studies|data|research|according to|evidence|survey)\b|%/.test(low)],
+   ["Qarshi fikr (however, critics, although, on the other hand)",/\b(however|critics|although|on the other hand|opponents)\b/.test(low)],
+   ["Xulosa (in conclusion, therefore, thus, overall)",/\b(in conclusion|therefore|thus|overall|to sum up)\b/.test(low)]
+  ];
+  $("#essayChecks").innerHTML=items.map(function(i){return '<div class="check'+(i[1]?" ok":"")+'"><span class="dot">'+(i[1]?"✓":"")+'</span><span>'+i[0]+'</span></div>';}).join("");
+}
+function compute(){
+  var det=$$("#rubricArea details"),sum=0,max=0,n=0;
+  det.forEach(function(d){max+=5;var c=$("input:checked",d),sc=$("[data-score]",d);
+    if(c){var p=PTS[c.value];sum+=p;n++;sc.textContent=p+" / 5";sc.style.color="var(--ink)";}else{sc.textContent="—";sc.style.color="var(--slate)";}});
+  var pct=max?Math.round(sum/max*100):0;
+  $("#sumOut").textContent=sum;$("#maxOut").textContent=max;$("#critOut").textContent=n+" / "+det.length;
+  if(!n){$("#pctOut").textContent="—";$("#meterBar").style.width="0%";$("#gradeOut").textContent="baho —";$("#gradeOut").className="gradepill gr5";return;}
+  var g=grade(pct);
+  $("#pctOut").textContent=pct+"%";$("#meterBar").style.width=pct+"%";$("#gradeOut").textContent="baho "+g;$("#gradeOut").className="gradepill "+gradeCls(g);
+}
+
+/* profil */
+function viewProfile(){
+  var html='<div class="section-head"><div class="eyebrow">CT-profil · 6 ko‘nikma bo‘yicha radar</div><h2>'+(S.role==="teacher"?"Talaba CT-profili — o‘qituvchi ko‘rinishi":"Mening CT-profilim")+'</h2>'+
+   '<p class="lede">Har talaba uchun Facione 6 ko‘nikmasi bo‘yicha profil. Boshlang‘ich (pre) va joriy ko‘rsatkichlar solishtiriladi — malaka o‘sishi kuzatiladi.</p></div>'+
+   '<div class="panel pad no-print" style="margin-bottom:18px;display:flex;gap:16px;align-items:end;flex-wrap:wrap"><div style="min-width:220px;flex:1"><label class="fld" for="profSel">Talaba</label><select id="profSel">'+stuOptions(S.stu)+'</select></div>'+
+   '<div class="tile hl" style="flex:1;min-width:180px"><div class="lab">Umumiy CT darajasi</div><div class="big" id="profOverall">—</div><div class="sub" id="profGrowth">—</div></div>'+
+   '<button class="btn-ghost" id="printBtn">Chop etish / PDF</button></div>'+
+   '<div class="split"><div class="panel plain pad"><div class="radar-wrap" id="radarBox"></div><div class="legend"><span><i style="background:var(--brown)"></i>Joriy daraja</span><span><i style="background:var(--pre-line)"></i>Boshlang‘ich (pre)</span></div></div>'+
+   '<div class="panel pad"><h3 style="font-size:20px;margin-bottom:18px">Ko‘nikmalar kesimi</h3><div class="skill-list" id="skillList"></div><div class="advice" id="profAdvice"></div></div></div>';
+  return{html:html,title:"CT-profil",after:function(){
+    function draw(){
+      var stu=getStu(S.stu),ov=Math.round(mean(stu.cur)),ovp=Math.round(mean(stu.pre));
+      $("#profOverall").textContent=ov+"%";$("#profGrowth").textContent="baho "+grade(ov)+" · pre "+ovp+"% → "+(ov>=ovp?"+":"")+(ov-ovp)+" p.p.";
+      $("#radarBox").innerHTML=radarSVG([{vals:stu.pre,color:"var(--pre-line)",dash:1,w:1.5},{vals:stu.cur,color:"var(--brown)",fill:"rgba(140,80,56,.14)"}],410);
+      $("#skillList").innerHTML=SKILLS.map(function(s,i){var d=stu.cur[i]-stu.pre[i];
+        return '<div class="skill-row"><div class="nm">'+s.k+' <em>'+s.en+'</em></div><div class="val tnum">'+stu.cur[i]+'% <span style="color:var(--ash)">('+(d>=0?"+":"")+d+')</span></div><div class="dualbar"><span class="pre" style="width:'+stu.pre[i]+'%"></span><span class="now" style="width:'+stu.cur[i]+'%"></span></div></div>';}).join("");
+      var w=stu.cur.indexOf(Math.min.apply(null,stu.cur));
+      $("#profAdvice").innerHTML='<b>Tavsiya:</b> eng zaif ko‘nikma — <b>'+SKILLS[w].k+'</b> ('+stu.cur[w]+'%). '+TIPS[w];
+    }
+    $("#profSel").addEventListener("change",function(){S.stu=this.value;save();draw();});
+    $("#printBtn").addEventListener("click",function(){window.print();});
+    draw();
+  }};
+}
+
+/* statistika */
+function viewStats(){
+  var html='<div class="section-head"><div class="eyebrow">O‘qituvchi paneli</div><h2>Guruh statistikasi — ko‘nikmalar bo‘yicha kesim</h2>'+
+   '<p class="lede">Har talabaning 6 ko‘nikma bo‘yicha joriy foizi, umumiy CT darajasi va bahosi. Ustun sarlavhasini bosib saralang.</p></div>'+
+   '<div class="tiles" id="statTiles" style="margin-bottom:20px"></div>'+
+   '<div class="hero-cta no-print" style="margin:0 0 16px"><button class="btn-ghost" id="csvBtn">CSV yuklab olish</button><button class="btn-ghost" id="resetData">Demo ma’lumotni tiklash</button></div>'+
+   '<div class="tbl-wrap"><table id="statTable"><thead><tr id="statHead"></tr></thead><tbody id="statBody"></tbody></table></div>';
+  return{html:html,title:"Statistika",after:function(){
+    var cols=[{k:"name",l:"Talaba"},{k:"group",l:"Guruh"}].concat(SHORT.map(function(s,i){return{k:"c"+i,l:s,n:1};})).concat([{k:"ov",l:"Umumiy",n:1},{k:"g",l:"Baho"}]);
+    function val(s,k){if(k==="name")return s.name;if(k==="group")return s.group;if(k==="ov"||k==="g"){var o=Math.round(mean(s.cur));return k==="ov"?o:grade(o);}return s.cur[+k.slice(1)];}
+    function draw(){
+      $("#statHead").innerHTML=cols.map(function(c){var a=S.sort.k===c.k?(S.sort.d>0?" ▲":" ▼"):"";
+        return '<th'+(c.n?' class="num"':'')+' aria-sort="'+(S.sort.k===c.k?(S.sort.d>0?"ascending":"descending"):"none")+'"><button data-k="'+c.k+'">'+c.l+a+'</button></th>';}).join("");
+      var rows=STUDENTS.slice().sort(function(a,b){var x=val(a,S.sort.k),y=val(b,S.sort.k);return (x>y?1:x<y?-1:0)*S.sort.d;});
+      var sums=[0,0,0,0,0,0],ovs=[];
+      var body=rows.map(function(s){var ov=Math.round(mean(s.cur));ovs.push(ov);var g=grade(ov);
+        return '<tr><td>'+esc(s.name)+'</td><td>'+s.group+'</td>'+s.cur.map(function(v,i){sums[i]+=v;return '<td class="num">'+v+'</td>';}).join("")+'<td class="num"><b>'+ov+'%</b></td><td><span class="gpill '+gradeCls(g)+'">'+g+'</span></td></tr>';}).join("");
+      var avg=sums.map(function(x){return Math.round(x/STUDENTS.length);}),ao=Math.round(mean(ovs));
+      $("#statBody").innerHTML=body+'<tr class="avg"><td>Guruh o‘rtachasi</td><td>n='+STUDENTS.length+'</td>'+avg.map(function(v){return '<td class="num">'+v+'</td>';}).join("")+'<td class="num">'+ao+'%</td><td><span class="gpill '+gradeCls(grade(ao))+'">'+grade(ao)+'</span></td></tr>';
+      var order=avg.map(function(v,i){return{i:i,v:v};}).sort(function(a,b){return a.v-b.v;}),weak=order[0],strong=order[5];
+      var gr={2:0,3:0,4:0,5:0};ovs.forEach(function(o){gr[grade(o)]++;});
+      $("#statTiles").innerHTML=[
+        {lab:"Guruh CT darajasi",big:ao+"%",sub:"o‘rtacha baho "+grade(ao),hl:1},
+        {lab:"Eng kuchli ko‘nikma",big:SKILLS[strong.i].k,sub:strong.v+"%"},
+        {lab:"Eng zaif ko‘nikma",big:SKILLS[weak.i].k,sub:weak.v+"% — e’tibor talab"},
+        {lab:"Baholar (5 / 4 / 3 / 2)",big:gr[5]+" / "+gr[4]+" / "+gr[3]+" / "+gr[2],sub:STUDENTS.length+" talaba"}
+      ].map(function(x){return '<div class="tile'+(x.hl?" hl":"")+'"><div class="lab">'+x.lab+'</div><div class="big" style="font-size:'+(String(x.big).length>5?"20px":"30px")+'">'+x.big+'</div><div class="sub">'+x.sub+'</div></div>';}).join("");
+      $$("#statHead button").forEach(function(b){b.addEventListener("click",function(){S.sort={k:b.dataset.k,d:S.sort.k===b.dataset.k?-S.sort.d:1};draw();});});
+    }
+    draw();
+    $("#csvBtn").addEventListener("click",function(){
+      var head=["Talaba","Guruh"].concat(SKILLS.map(function(s){return s.k;})).concat(["Umumiy","Baho"]);
+      var lines=[head].concat(STUDENTS.map(function(s){var o=Math.round(mean(s.cur));return[s.name,s.group].concat(s.cur).concat([o,grade(o)]);}));
+      var csv="﻿"+lines.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+      var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="critiread-statistika.csv";a.click();URL.revokeObjectURL(a.href);
+    });
+    $("#resetData").addEventListener("click",function(){if(confirm("Barcha saqlangan natijalar o‘chirilsinmi?"))resetAll();});
+  }};
+}
+
+/* tadqiqot: Cohen's d */
+function cohensD(preM,preSD,postM,postSD){var p=Math.sqrt((preSD*preSD+postSD*postSD)/2);return p===0?0:(postM-preM)/p;}
+function interp(d){var a=Math.abs(d);return a>=0.8?"kuchli ta’sir":a>=0.5?"o‘rta ta’sir":a>=0.2?"kichik ta’sir":"juda kichik";}
+function viewResearch(){
+  function inp(id,v){return '<input class="num" id="'+id+'" inputmode="decimal" value="'+v+'" aria-label="'+id+'">';}
+  var html='<div class="section-head"><div class="eyebrow">Eksperimental o‘lchov · 15 &amp; 30-modul</div><h2>Diagnostik test va samaradorlik (Cohen’s d)</h2>'+
+   '<p class="lede">Pre/post natijalar solishtiriladi. Cohen’s d — eksperiment ta’sir kuchini o‘lchaydigan standart ko‘rsatkich. Qiymatlarni tahrirlang — natija darhol qayta hisoblanadi.</p></div>'+
+   '<div class="split"><div class="panel pad"><h3 style="font-size:20px;margin-bottom:18px">Guruh natijalari (o‘rtacha / SD, n)</h3><div class="grid2" style="gap:18px">'+
+   '<div><div class="eyebrow" style="color:var(--slate)">Eksperimental guruh</div><label class="fld" style="margin-top:12px">Pre — o‘rtacha / SD</label><div style="display:flex;gap:9px">'+inp("ePreM",52.4)+inp("ePreSD",9.1)+'</div>'+
+   '<label class="fld" style="margin-top:12px">Post — o‘rtacha / SD</label><div style="display:flex;gap:9px">'+inp("ePostM",71.8)+inp("ePostSD",8.3)+'</div><label class="fld" style="margin-top:12px">n</label>'+inp("eN",28)+'</div>'+
+   '<div><div class="eyebrow">Nazorat guruh</div><label class="fld" style="margin-top:12px">Pre — o‘rtacha / SD</label><div style="display:flex;gap:9px">'+inp("cPreM",51.9)+inp("cPreSD",9.4)+'</div>'+
+   '<label class="fld" style="margin-top:12px">Post — o‘rtacha / SD</label><div style="display:flex;gap:9px">'+inp("cPostM",57.2)+inp("cPostSD",9.0)+'</div><label class="fld" style="margin-top:12px">n</label>'+inp("cN",28)+'</div></div></div>'+
+   '<div><div class="tiles" style="margin-bottom:14px"><div class="tile hl"><div class="lab">Cohen’s d — eksperimental</div><div class="big" id="dExp">—</div><div class="sub" id="dExpInt">—</div></div>'+
+   '<div class="tile"><div class="lab">Cohen’s d — nazorat</div><div class="big" id="dCtl">—</div><div class="sub" id="dCtlInt">—</div></div></div>'+
+   '<div class="tile" style="margin-bottom:14px"><div class="lab">Guruhlararo farq (o‘sish farqi)</div><div class="big" id="dBet">—</div><div class="sub" id="dBetInt">—</div></div>'+
+   '<div class="panel pad"><h3 style="font-size:19px;margin-bottom:6px">Pre → Post o‘rtacha</h3><div id="prepostBars"></div>'+
+   '<p class="note" style="margin-top:16px">d = (M<sub>post</sub> − M<sub>pre</sub>) / SD<sub>pooled</sub>, SD<sub>pooled</sub> = √((SD<sub>pre</sub>² + SD<sub>post</sub>²) / 2). 95% CI ≈ d ± 1.96·√(1/n + d²/2n). |d| ≥ 0.8 — kuchli, 0.5–0.8 — o‘rta, 0.2–0.5 — kichik ta’sir. Guruhlararo farq: (ΔE − ΔC) / SD<sub>pooled</sub>(post).</p></div></div></div>';
+  return{html:html,title:"Tadqiqot",after:function(){
+    var g=function(id){return parseFloat(String($("#"+id).value).replace(",","."))||0;};
+    function ci(d,n){var se=Math.sqrt(1/n+d*d/(2*n));return "95% CI ["+(d-1.96*se).toFixed(2)+"; "+(d+1.96*se).toFixed(2)+"]";}
+    function calc(){
+      var eD=cohensD(g("ePreM"),g("ePreSD"),g("ePostM"),g("ePostSD")),cD=cohensD(g("cPreM"),g("cPreSD"),g("cPostM"),g("cPostSD"));
+      $("#dExp").textContent=eD.toFixed(2);$("#dExpInt").textContent=interp(eD)+" · Δ "+(g("ePostM")-g("ePreM")).toFixed(1)+" p.p. · "+ci(eD,Math.max(g("eN"),2));
+      $("#dCtl").textContent=cD.toFixed(2);$("#dCtlInt").textContent=interp(cD)+" · Δ "+(g("cPostM")-g("cPreM")).toFixed(1)+" p.p. · "+ci(cD,Math.max(g("cN"),2));
+      var sp=Math.sqrt((g("ePostSD")*g("ePostSD")+g("cPostSD")*g("cPostSD"))/2),dB=sp?((g("ePostM")-g("ePreM"))-(g("cPostM")-g("cPreM")))/sp:0;
+      $("#dBet").textContent=dB.toFixed(2);$("#dBetInt").textContent=interp(dB);
+      var rows=[["Eksperimental — pre",g("ePreM"),"var(--pre-line)"],["Eksperimental — post",g("ePostM"),"var(--brown)"],["Nazorat — pre",g("cPreM"),"var(--pre-line)"],["Nazorat — post",g("cPostM"),"var(--brown)"]];
+      var mx=Math.max.apply(null,rows.map(function(r){return r[1];}))||100;
+      $("#prepostBars").innerHTML=rows.map(function(r){return '<div style="display:flex;align-items:center;gap:11px;margin-top:11px"><div style="width:162px;font-size:13.5px;color:var(--slate)">'+r[0]+'</div><div style="flex:1;height:18px;background:var(--card);border-radius:6px;overflow:hidden"><div style="height:100%;width:'+(r[1]/mx*100)+'%;background:'+r[2]+';border-radius:6px"></div></div><div class="tnum" style="width:52px;text-align:right;font-weight:500;font-size:14px">'+r[1].toFixed(1)+'</div></div>';}).join("");
+    }
+    $$("#app input.num").forEach(function(i){i.addEventListener("input",calc);});calc();
+  }};
+}
+
+/* ============ INIT ============ */
+load();applyTheme();syncRole();
+$$("#roleSwitch button").forEach(function(b){b.addEventListener("click",function(){setRole(b.dataset.role);});});
+$("#themeBtn").addEventListener("click",function(){
+  var cur=document.documentElement.getAttribute("data-theme");S.theme=cur==="dark"?"light":"dark";applyTheme();save();});
+window.addEventListener("hashchange",route);
+route();
+</script>
+</body>
+</html>
