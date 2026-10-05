@@ -15,7 +15,7 @@ const server = http.createServer((req, res) => {
     const schema = body.output_config && body.output_config.format && body.output_config.format.schema;
     if (all.includes('TRIGGER_REFUSE')) { stop = 'refusal'; text = ''; }
     else if (schema && schema.properties.criteria) {
-      text = JSON.stringify({ criteria: [1, 2, 3, 4, 5].map((i) => ({ index: i, level: 'BCBAC'[i - 1], evidence: 'quote ' + i, reason: 'sabab ' + i })), summary: 'Umumiy xulosa' });
+      text = JSON.stringify({ criteria: [1, 2, 3, 4, 5].map((i) => ({ index: i, level: (all.includes('TRIGGER_NA') ? 'BCBAN' : 'BCBAC')[i - 1], evidence: 'quote ' + i, reason: 'sabab ' + i })), summary: 'Umumiy xulosa' });
     } else if (schema && schema.properties.questions) {
       text = JSON.stringify({ questions: [0, 1, 2].map((i) => ({ skill: i, passage: '', question: 'Q' + i + '?', options: ['a', 'b', 'c', 'd'], answer: (i + 1) % 4, explanation: 'izoh ' + i })).concat([{ skill: 9, passage: '', question: 'bad', options: ['a'], answer: 7, explanation: '' }]) });
     } else text = 'Javob: ' + String((body.messages || []).slice(-1)[0].content).slice(0, 40);

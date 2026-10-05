@@ -449,8 +449,8 @@ function readItems(area){
 }
 function previewScore(area,out){
   var det=$$("details",area),sum=0,max=0,n=0;
-  det.forEach(function(d){max+=5;var c=$("input:checked",d),sc=$("[data-score]",d);
-    if(c){var p=PTS[c.value];sum+=p;n++;sc.textContent=p+" / 5";sc.style.color="var(--ink)";}else{sc.textContent="—";sc.style.color="var(--slate)";}});
+  det.forEach(function(d){var c=$("input:checked",d),sc=$("[data-score]",d);
+    if(c){var p=PTS[c.value];sum+=p;max+=5;n++;sc.textContent=p+" / 5";sc.style.color="var(--ink)";}else{sc.textContent="—";sc.style.color="var(--slate)";}});
   var pct=max?Math.round(sum/max*100):0;
   $(out+" .pv-sum").textContent=sum;$(out+" .pv-max").textContent=max;$(out+" .pv-n").textContent=n+" / "+det.length;
   if(!n){$(out+" .pv-pct").textContent="—";$(out+" .pv-bar").style.width="0%";$(out+" .pv-grade").textContent="baho —";return 0;}
@@ -653,16 +653,19 @@ function wireSuggest(essayId,area){
     b.disabled=false;b.textContent="Qayta olish";
     if(r.status!==200){toast(r.data.error||"AI xatosi");return;}
     r.data.criteria.forEach(function(c){
-      var inp=$('input[name="e'+c.index+'"][value="'+c.level+'"]',area);if(inp)inp.checked=true;
+      var NA=c.level==="N";
+      $$('input[name="e'+c.index+'"]',area).forEach(function(x){x.checked=false;});
+      var inp=NA?null:$('input[name="e'+c.index+'"][value="'+c.level+'"]',area);if(inp)inp.checked=true;
       var det=$('details[data-ci="'+c.index+'"]',area);
       if(det){var old=$(".ai-note",det);if(old)old.remove();
         var n=document.createElement("div");n.className="ai-note";
-        n.innerHTML='<b>AI taklifi: '+esc(c.level)+'.</b> '+esc(c.reason)+(c.evidence?' <q>'+esc(c.evidence)+'</q>':'');
+        n.innerHTML=NA?'<b>AI: bu esseda baholab bo‘lmaydi.</b> '+esc(c.reason)+' <i>Daraja belgilanmadi: o‘zingiz hal qiling yoki mezonni o‘tkazib yuboring.</i>':'<b>AI taklifi: '+esc(c.level)+'.</b> '+esc(c.reason)+(c.evidence?' <q>'+esc(c.evidence)+'</q>':'');
         det.appendChild(n);}
     });
     area.dispatchEvent(new Event("change"));
     $("#aiSummary").innerHTML='<div class="ai-box"><div class="ai-tag">AI xulosasi · taklif</div><div class="ai-text">'+esc(r.data.summary)+'</div></div>';
-    toast("Darajalar belgilandi. Tekshirib, kerak bo‘lsa o‘zgartiring");
+    var nNA=r.data.criteria.filter(function(c){return c.level==="N";}).length;
+    toast("Darajalar belgilandi"+(nNA?" ("+nNA+" ta mezon baholanmaydi)":"")+". Tekshirib, kerak bo‘lsa o‘zgartiring");
   });
 }
 
