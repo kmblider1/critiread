@@ -190,5 +190,20 @@ for (let i = 0; i < 32; i++) { const r = await J1.call('POST', 'coach', { module
 ok(limitHit > 0 && limitHit <= 30, `kunlik limit (30) ishladi (${limitHit}-so‘rovda)`);
 ok((await anon.call('POST', 'coach', { module: 5, messages: [{ role: 'user', content: 'x' }] })).status === 401, 'kirishsiz AI 401');
 
+console.log('15) talabalar ishlari (o‘qituvchi ko‘rinishi)');
+const wk = (await T.call('GET', 'teacher/work')).data.students;
+const wj1 = wk.find((x) => x.email === 'j1@critiread.uz');
+ok(wk.length >= 5 && wj1 && wj1.essays >= 1 && wj1.last, 'umumiy jadval: faollik hisoblari va oxirgi sana');
+const wd = (await T.call('GET', `teacher/students/${wj1.id}/work`)).data;
+ok(wd.student.email === 'j1@critiread.uz' && wd.essays.length >= 1, 'talaba sahifasi: esselar to‘liq matni bilan');
+ok(wd.essays.some((e) => e.feedback.length === 2), 'talabaga berilgan AI fikrlari ko‘rinadi');
+const s5 = wk.find((x) => x.email === 's1@critiread.uz');
+const wd5 = (await T.call('GET', `teacher/students/${s5.id}/work`)).data;
+ok(wd5.quiz.length >= 1 && wd5.quiz[0].right !== null && 'correct' in wd5.quiz[0], 'mashq javoblari to‘g‘ri javob bilan');
+ok(wd5.diag.pre && wd5.diag.post, 'PRE/POST ko‘rinadi');
+ok((await J1.call('GET', 'teacher/work')).status === 403, 'talaba umumiy ishlarni ko‘ra olmaydi');
+ok((await J1.call('GET', `teacher/students/${wj1.id}/work`)).status === 403, 'talaba boshqasining ishini ko‘ra olmaydi');
+ok((await T.call('GET', 'teacher/students/99999/work')).status === 404, 'noma’lum talaba 404');
+
 console.log(`\nNatija: ${pass} o‘tdi, ${fail} muvaffaqiyatsiz`);
 process.exit(fail ? 1 : 0);

@@ -55,7 +55,7 @@ function tabsFor(){
   var u=S.user,t=[{r:"",l:"Bosh sahifa"},{r:"modules",l:"Mavzular (30)"}];
   if(!u)return t;
   if(u.role==="student")t.push({r:"test",l:"Diagnostika"},{r:"essay",l:"Esse"},{r:"profile",l:"CT-profil"});
-  else t.push({r:"students",l:"Talabalar"},{r:"rubric",l:"Baholash"},{r:"queue",l:"Esse navbati"},{r:"aiq",l:"AI savollar"},{r:"profile",l:"Profillar"},{r:"research",l:"Tadqiqot (Cohen’s d)"});
+  else t.push({r:"students",l:"Talabalar"},{r:"rubric",l:"Baholash"},{r:"work",l:"Talaba ishlari"},{r:"queue",l:"Esse navbati"},{r:"aiq",l:"AI savollar"},{r:"profile",l:"Profillar"},{r:"research",l:"Tadqiqot (Cohen’s d)"});
   return t;
 }
 function chrome(cur){
@@ -75,15 +75,15 @@ function note(title,text,btn){return '<div class="locked"><h2 style="font-size:3
 async function route(){
   var seq=++S.seq;
   var h=location.hash.replace(/^#\/?/,"").split("/"),r=h[0]||"",arg=h[1];
-  var needAuth={test:1,essay:1,profile:1,students:1,rubric:1,queue:1,research:1,account:1,aiq:1};
-  var teacherOnly={students:1,rubric:1,queue:1,research:1,aiq:1},studentOnly={test:1,essay:1};
+  var needAuth={test:1,essay:1,profile:1,students:1,rubric:1,queue:1,research:1,account:1,aiq:1,work:1};
+  var teacherOnly={students:1,rubric:1,queue:1,research:1,aiq:1,work:1},studentOnly={test:1,essay:1};
   chrome(r);
   var app=$("#app");
   if(needAuth[r]&&!S.user){location.hash="#/login";return;}
   if(teacherOnly[r]&&S.user.role!=="teacher"){app.innerHTML='<section class="view">'+note("Bu bo‘lim o‘qituvchi uchun","Sizning hisobingiz talaba hisobi.")+'</section>';return;}
   if(studentOnly[r]&&S.user.role!=="student"){app.innerHTML='<section class="view">'+note("Bu bo‘lim talaba uchun","O‘qituvchi hisobida test va esse topshirilmaydi. Talabalar natijasini «Talabalar» bo‘limida ko‘ring.")+'</section>';return;}
   app.innerHTML='<div class="loading">Yuklanmoqda…</div>';
-  var views={"":viewHome,modules:viewModules,module:viewModule,login:viewLogin,join:viewJoin,account:viewAccount,test:viewTest,essay:viewEssay,profile:viewProfile,students:viewStudents,rubric:viewRubric,queue:viewQueue,aiq:viewAiq,research:viewResearch};
+  var views={"":viewHome,modules:viewModules,module:viewModule,login:viewLogin,join:viewJoin,account:viewAccount,test:viewTest,essay:viewEssay,profile:viewProfile,students:viewStudents,rubric:viewRubric,queue:viewQueue,aiq:viewAiq,work:viewWork,research:viewResearch};
   var v=await (views[r]||viewHome)(arg);
   if(seq!==S.seq)return;
   app.innerHTML='<section class="view">'+v.html+'</section>';
@@ -712,5 +712,76 @@ async function viewAiq(){
         var q=r.data.questions[+c.dataset.copy];
         navigator.clipboard.writeText(JSON.stringify({t:q.t,o:q.o,a:q.a,why:q.why,p:q.p||undefined},null,1)).then(function(){toast("Nusxalandi");},function(){toast("Nusxalab bo‘lmadi");});});});
     });
+  }};
+}
+
+/* ---------- o'qituvchi: talabalar ishlari (hammasi bir joyda) ---------- */
+function dl(name,rows){
+  var csv="﻿"+rows.map(function(r){return r.map(function(c){return '"'+String(c==null?"":c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=name;a.click();URL.revokeObjectURL(a.href);
+}
+async function viewWork(arg){
+  if(arg)return viewWorkOne(parseInt(arg,10));
+  var r=await api("GET","teacher/work"),L=r.data.students||[];
+  var head='<th>Talaba</th><th>Guruh</th><th class="num">Mashq</th><th class="num">To‘g‘ri</th><th>PRE/POST</th><th class="num">Esse</th><th class="num">Baholangan</th><th>Oxirgi faollik</th><th></th>';
+  var rows=L.map(function(s){
+    return '<tr><td>'+esc(s.name)+'<div class="note">'+esc(s.email)+'</div></td><td>'+esc(s.grp||"—")+'</td><td class="num">'+s.quizDone+' / 30</td><td class="num">'+s.quizRight+'</td>'+
+     '<td>'+(s.pre?"PRE":"—")+' / '+(s.post?"POST":"—")+'</td><td class="num">'+s.essaysGraded+' / '+s.essays+'</td><td class="num">'+s.graded+'</td>'+
+     '<td>'+(s.last?esc(String(s.last).slice(0,16)):'<span class="note">hali faol emas</span>')+'</td><td><div class="row-actions"><a href="#/work/'+s.id+'">Ochish</a></div></td></tr>';}).join("");
+  var html='<div class="section-head"><div class="eyebrow">O‘qituvchi paneli</div><h2>Talabalar bajargan ishlar</h2>'+
+   '<p class="lede">Har talaba nimalar qilgani: mashq javoblari, PRE/POST, esselar va baholar. Talabani ochsangiz barcha ishlari matnlari bilan ko‘rinadi.</p></div>'+
+   '<div class="hero-cta no-print" style="margin:0 0 16px"><button class="btn-ghost" id="workCsv">CSV yuklab olish</button></div>'+
+   (L.length?'<div class="tbl-wrap"><table style="min-width:820px"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty">Hali talaba yo‘q.</div>');
+  return{html:html,title:"Talaba ishlari",after:function(){
+    var b=$("#workCsv");if(!b)return;
+    b.addEventListener("click",function(){
+      var t=[["Talaba","Email","Guruh","Mashq","Mashq to‘g‘ri","PRE","POST","Esse","Esse baholangan","Baholangan urinish","Oxirgi faollik"]];
+      L.forEach(function(s){t.push([s.name,s.email,s.grp,s.quizDone,s.quizRight,s.pre?"ha":"",s.post?"ha":"",s.essays,s.essaysGraded,s.graded,s.last]);});
+      dl("critiread-ishlar.csv",t);});
+  }};
+}
+function workEssays(d){
+  if(!d.essays.length)return '<div class="empty">Esse topshirmagan.</div>';
+  return d.essays.map(function(e){
+    var m=MODULES[e.topic-1];
+    var badge=e.status==="graded"?'<span class="status-pill gr" style="margin-left:auto">'+e.pct+'% · baho '+e.grade+'</span>':'<span class="status-pill sub" style="margin-left:auto">baholanmagan</span>';
+    var fb=(e.feedback||[]).map(function(f){return '<div class="ai-box"><div class="ai-tag">Talabaga berilgan AI fikri</div><div class="ai-text">'+esc(f.body)+'</div></div>';}).join("");
+    var act=e.status!=="graded"?'<div class="hero-cta"><a class="btn-primary btn-sm" href="#/queue/'+e.id+'">Baholash</a></div>':'';
+    return '<details class="rubric-crit" style="margin-bottom:10px"><summary><span class="crit-idx">'+e.topic+'</span><span><span class="crit-name">'+esc(m?m.en:"")+'</span> <span class="crit-en">'+esc(String(e.created_at).slice(0,16))+'</span></span>'+badge+'</summary>'+
+     '<div style="padding:0 17px 16px"><div class="essay-text">'+esc(e.body)+'</div>'+fb+act+'</div></details>';}).join("");
+}
+function workQuiz(d){
+  if(!d.quiz.length)return '<div class="empty">Mashq bajarmagan.</div>';
+  var L=["A","B","C","D"];
+  return '<div class="tbl-wrap"><table style="min-width:0"><thead><tr><th>Modul</th><th>Talaba javobi</th><th>To‘g‘ri javob</th><th>Natija</th><th>Sana</th></tr></thead><tbody>'+
+   d.quiz.map(function(q){var m=MODULES[q.module-1];
+     return '<tr><td>'+q.module+'. '+esc(m?m.en:"")+'</td><td>'+L[q.choice]+'</td><td>'+(q.right==null?"—":L[q.right])+'</td><td>'+(q.correct?'<span class="status-pill gr">to‘g‘ri</span>':'<span class="status-pill sub">noto‘g‘ri</span>')+'</td><td>'+esc(String(q.created_at).slice(0,16))+'</td></tr>';}).join("")+'</tbody></table></div>';
+}
+function workAttempts(d){
+  if(!d.attempts.length)return '<div class="empty">Hali baholanmagan.</div>';
+  return '<div class="tbl-wrap"><table style="min-width:0"><thead><tr><th>Tur</th><th>Mavzu</th><th class="num">CT%</th><th>Baho</th><th>Sana</th></tr></thead><tbody>'+
+   d.attempts.slice().reverse().map(function(a){var m=a.topic?MODULES[a.topic-1]:null;
+     return '<tr><td>'+(KIND[a.kind]||a.kind)+'</td><td>'+(m?a.topic+". "+esc(m.en):"—")+'</td><td class="num">'+a.pct+'%</td><td><span class="gpill '+gradeCls(a.grade)+'">'+a.grade+'</span></td><td>'+esc(String(a.at).slice(0,16))+'</td></tr>';}).join("")+'</tbody></table></div>';
+}
+async function viewWorkOne(id){
+  var r=await api("GET","teacher/students/"+id+"/work");
+  if(r.status!==200)return{html:'<div class="empty">'+esc(r.data.error||"Topilmadi")+' <a href="#/work">Orqaga</a></div>',title:"Talaba ishlari"};
+  var d=r.data,right=d.quiz.filter(function(q){return q.correct;}).length,gradedE=d.essays.filter(function(e){return e.status==="graded";}).length;
+  var h3=function(t,m){return '<h3 style="font-size:22px;margin:'+m+'px 0 10px">'+t+'</h3>';};
+  var html='<div class="crumbs"><a href="#/work">Talaba ishlari</a> / '+esc(d.student.name)+'</div>'+
+   '<div class="section-head"><div class="eyebrow">'+esc(d.student.email)+(d.student.grp?" · "+esc(d.student.grp):"")+'</div><h2>'+esc(d.student.name)+'</h2></div>'+
+   '<div class="tiles" style="margin-bottom:22px"><div class="tile hl"><div class="lab">CT darajasi</div><div class="big">'+(d.overall===null?"—":d.overall+"%")+'</div><div class="sub">'+(d.grade?"baho "+d.grade:"baholanmagan")+'</div></div>'+
+   '<div class="tile"><div class="lab">Mashqlar</div><div class="big">'+d.quiz.length+' / 30</div><div class="sub">'+right+' to‘g‘ri</div></div>'+
+   '<div class="tile"><div class="lab">Esselar</div><div class="big">'+d.essays.length+'</div><div class="sub">'+gradedE+' baholangan</div></div>'+
+   '<div class="tile"><div class="lab">Baholangan urinish</div><div class="big">'+d.attempts.length+'</div><div class="sub">rubrika va esse</div></div></div>'+
+   h3("Diagnostika (PRE → POST)",8)+deltaTable(d.diag)+h3("Esselar",30)+workEssays(d)+h3("Modul mashqlari",30)+workQuiz(d)+h3("Baholangan topshiriqlar",30)+workAttempts(d)+
+   '<div class="hero-cta no-print"><a class="btn-ghost" href="#/profile/'+id+'">CT-profil</a><button class="btn-ghost" id="oneCsv">CSV yuklab olish</button></div>';
+  return{html:html,title:d.student.name,after:function(){
+    $("#oneCsv").addEventListener("click",function(){
+      var t=[["Bo‘lim","Mavzu/Modul","Natija","Sana"]];
+      d.quiz.forEach(function(q){t.push(["Mashq",q.module,q.correct?"to‘g‘ri":"noto‘g‘ri",q.created_at]);});
+      d.essays.forEach(function(e){t.push(["Esse",e.topic,e.status==="graded"?e.pct+"% baho "+e.grade:"baholanmagan",e.created_at]);});
+      d.attempts.forEach(function(a){t.push(["Baholangan topshiriq",a.topic||"",a.pct+"% baho "+a.grade,a.at]);});
+      dl("critiread-"+d.student.email.split("@")[0]+".csv",t);});
   }};
 }
